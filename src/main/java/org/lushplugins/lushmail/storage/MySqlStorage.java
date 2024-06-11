@@ -161,7 +161,7 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
-    public ReceivedMail getReceivedMail(UUID receiver, String mailId) {ae
+    public ReceivedMail getReceivedMail(UUID receiver, String mailId) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT state, favourited FROM received_mail WHERE uuid = ? AND mail_id = ?;")) {
             stmt.setString(1, receiver.toString());
             stmt.setString(2, mailId);
