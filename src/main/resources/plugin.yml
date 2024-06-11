@@ -1,0 +1,6 @@
+name: LushMail
+version: '${version}'
+main: org.lushplugins.lushmail.LushMail
+api-version: '1.20'
+softdepend:
+  - LuckPerms
