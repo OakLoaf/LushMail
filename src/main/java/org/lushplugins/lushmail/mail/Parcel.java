@@ -8,8 +8,13 @@ import java.util.List;
 public class Parcel extends Mail {
     private final List<Mail> mail;
 
-    public Parcel(String id, List<Mail> mail) {
-        super(id, "parcel");
+    public Parcel(String id, List<Mail> mail, String sender) {
+        super(id, "text", sender, "Package from " + sender);
+        this.mail = mail;
+    }
+
+    public Parcel(String id, List<Mail> mail, String sender, String title) {
+        super(id, "parcel", sender, title);
         this.mail = mail;
     }
 

@@ -9,8 +9,13 @@ import org.lushplugins.lushmail.util.StringUtils;
 public class TextMail extends Mail {
     private String text;
 
-    public TextMail(String id, String text) {
-        super(id, "text");
+    public TextMail(String id, String text, String sender) {
+        super(id, "text", sender, "Letter from " + sender);
+        this.text = text;
+    }
+
+    public TextMail(String id, String text, String sender, String title) {
+        super(id, "text", sender, title);
         this.text = text;
     }
 

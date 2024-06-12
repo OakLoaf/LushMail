@@ -8,10 +8,21 @@ import org.lushplugins.lushlib.utils.SimpleItemStack;
 public abstract class Mail {
     private final String id;
     private final String type;
+    private final String sender;
+    private final String title;
 
-    public Mail(String id, String type) {
+    public Mail(String id, String type, String sender) {
         this.id = id;
         this.type = type;
+        this.sender = sender;
+        this.title = null;
+    }
+
+    public Mail(String id, String type, String sender, String title) {
+        this.id = id;
+        this.type = type;
+        this.sender = sender;
+        this.title = title;
     }
 
     /**
@@ -26,6 +37,13 @@ public abstract class Mail {
      */
     public String getType() {
         return type;
+    }
+
+    /**
+     * @return The sender of the message
+     */
+    public String getSender() {
+        return sender;
     }
 
     /**

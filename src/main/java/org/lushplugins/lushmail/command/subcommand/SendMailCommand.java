@@ -52,9 +52,18 @@ public class SendMailCommand extends SubCommand {
                         return;
                     }
 
-                    String senderName = sender instanceof Player player ? player.getUniqueId().toString() : "console";
-                    storageManager.saveMail(new TextMail(id, message))
-                        .thenAccept(ignored -> storageManager.sendMail(senderName, receiver, id));
+                    String senderId;
+                    String senderName;
+                    if (sender instanceof Player player) {
+                        senderId = player.getUniqueId().toString();
+                        senderName = player.getName();
+                    } else {
+                        senderId = "console";
+                        senderName = "console";
+                    }
+
+                    storageManager.saveMail(new TextMail(id, message, senderName))
+                        .thenAccept(ignored -> storageManager.sendMail(senderId, receiver, id));
                 });
             });
         });
