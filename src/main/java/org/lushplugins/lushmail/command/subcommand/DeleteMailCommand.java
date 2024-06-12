@@ -48,7 +48,7 @@ public class DeleteMailCommand extends SubCommand {
                 });
             });
         } else {
-            storageManager.getReceivedMailIds(player.getUniqueId(), mailId).thenAccept(ids -> {
+            storageManager.getReceivedMailIds(player.getUniqueId()).thenAccept(ids -> {
                 if (ids.isEmpty()) {
                     // TODO: Add configurable message
                     ChatColorHandler.sendMessage(sender, "Could not find any mail in your mail list");
