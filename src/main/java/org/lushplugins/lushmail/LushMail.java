@@ -8,6 +8,7 @@ import org.lushplugins.lushlib.hook.Hook;
 import org.lushplugins.lushlib.plugin.SpigotPlugin;
 import org.lushplugins.lushmail.command.MailCommand;
 import org.lushplugins.lushmail.hook.LuckPermsHook;
+import org.lushplugins.lushmail.listener.PlayerListener;
 import org.lushplugins.lushmail.mail.MailManager;
 import org.lushplugins.lushmail.mail.MailTypes;
 import org.lushplugins.lushmail.storage.StorageManager;
@@ -43,6 +44,8 @@ public final class LushMail extends SpigotPlugin {
 
         addHook("LuckPerms", () ->  registerHook(new LuckPermsHook()));
         getHooks().forEach(Hook::enable);
+
+        new PlayerListener().registerListeners();
 
         registerCommand(new MailCommand());
 

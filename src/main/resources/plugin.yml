@@ -4,3 +4,6 @@ main: org.lushplugins.lushmail.LushMail
 api-version: '1.20'
 softdepend:
   - LuckPerms
+commands:
+  mail:
+    usage: /mail

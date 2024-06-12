@@ -29,9 +29,9 @@ public class TextMail extends Mail {
 
     @Override
     public SimpleItemStack getPreviewItem() {
-        SimpleItemStack item = new SimpleItemStack(Material.PAPER);
-        item.setDisplayName("Message");
-        item.setLore(StringUtils.splitByCount(text, 50));
+        SimpleItemStack item = new SimpleItemStack(Material.WRITABLE_BOOK);
+        item.setDisplayName("&fLetter from ");
+        item.setLore(StringUtils.splitByCount(StringUtils.shortenString(text, 130), 50).stream().map(str -> "&7&o" + str).toList());
 
         return item;
     }
