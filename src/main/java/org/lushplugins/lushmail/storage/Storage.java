@@ -5,6 +5,7 @@ import org.jetbrains.annotations.Nullable;
 import org.lushplugins.lushlib.utils.SimpleItemStack;
 import org.lushplugins.lushmail.data.MailUser;
 import org.lushplugins.lushmail.data.OfflineMailUser;
+import org.lushplugins.lushmail.data.ReceivedGroupMail;
 import org.lushplugins.lushmail.data.ReceivedMail;
 import org.lushplugins.lushmail.mail.Mail;
 
@@ -22,6 +23,8 @@ public interface Storage {
     default void disable() {}
 
     boolean isMailIdAvailable(String id);
+
+    List<ReceivedGroupMail> getGroupMails();
 
     @NotNull List<String> getGroupsWithMail();
 

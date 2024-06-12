@@ -1,8 +1,11 @@
 package org.lushplugins.lushmail.mail;
 
+import com.google.common.collect.HashMultimap;
+import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.lushplugins.lushmail.LushMail;
+import org.lushplugins.lushmail.data.ReceivedGroupMail;
 import org.lushplugins.lushmail.storage.StorageManager;
 import org.lushplugins.lushmail.util.IdGenerator;
 
@@ -13,15 +16,30 @@ public class MailManager {
     private static final int ID_LENGTH = 6;
     private static final int MAX_GENERATION_ATTEMPTS = 10;
 
-    public CompletableFuture<Set<String>> getAllUnopenedMailIds(Player player) {
-        Set<String> mailIds = new HashSet<>();
+    private final HashMultimap<String, ReceivedGroupMail> groupMails = HashMultimap.create();
 
-        CompletableFuture<List<String>> future1 = LushMail.getInstance().getStorageManager().getReceivedMailIds(player.getUniqueId(), Mail.State.UNOPENED);
-        CompletableFuture<Set<String>> future2 = getUnopenedGroupMailIds(player);
-        future1.thenAccept(mailIds::addAll);
-        future2.thenAccept(mailIds::addAll);
+    public MailManager() {
+        Bukkit.getScheduler().runTaskTimerAsynchronously(LushMail.getInstance(), () -> {
+            LushMail.getInstance().getStorageManager().getGroupMails().thenAccept(groupMails -> {
+                this.groupMails.clear();
 
-        return CompletableFuture.allOf(future1, future2).thenApply(ignored -> mailIds);
+                for (ReceivedGroupMail groupMail : groupMails) {
+                    this.groupMails.put(groupMail.getGroup(), groupMail);
+                }
+            });
+        }, 0, 1200);
+    }
+
+    public CompletableFuture<List<String>> getAllUnopenedMailIds(Player player) {
+        return LushMail.getInstance().getStorageManager().getReceivedMailIds(player.getUniqueId(), Mail.State.UNOPENED).thenApply(mailIds -> {
+            for (String group : groupMails.keySet()) {
+                if (group.equals("all") || player.hasPermission("group." + group)) {
+                    mailIds.addAll(groupMails.get(group).stream().map(ReceivedGroupMail::getId).toList());
+                }
+            }
+
+            return mailIds;
+        });
     }
 
     public CompletableFuture<Set<String>> getUnopenedGroupMailIds(Player player) {

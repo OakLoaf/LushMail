@@ -9,6 +9,7 @@ import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.config.StorageConfig;
 import org.lushplugins.lushmail.data.MailUser;
 import org.lushplugins.lushmail.data.OfflineMailUser;
+import org.lushplugins.lushmail.data.ReceivedGroupMail;
 import org.lushplugins.lushmail.data.ReceivedMail;
 import org.lushplugins.lushmail.mail.Mail;
 
@@ -19,15 +20,17 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /*
  * Tables:
- *   mail: id, type, preview_item, data
+ *   mail_data: id, type, preview_item, data
  *   mail_users: uuid, username
  *   ignored_users: uuid, ignored_uuid
- *   received_mail: uuid, mail_id, state, favourited, time_sent, timeout
+ *   received_mail: mail_id, uuid, state, favourited, time_sent, timeout
  *   group_mail: mail_id, group, time_sent, timeout
  */
 public class MySqlStorage implements Storage {
@@ -44,7 +47,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public boolean isMailIdAvailable(String id) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM mail WHERE id = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM mail_data WHERE id = ?;")) {
             stmt.setString(1, id);
 
             ResultSet resultSet = stmt.executeQuery();
@@ -57,8 +61,34 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
+    public List<ReceivedGroupMail> getGroupMails() {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM group_mail WHERE (rm.timeout IS NULL OR rm.timeout > ?);")) {
+            stmt.setLong(1, Instant.now().getEpochSecond());
+
+            List<ReceivedGroupMail> groups = new ArrayList<>();
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                String mailId = resultSet.getString("mail_id");
+                String group = resultSet.getString("group");
+                long timeSent = resultSet.getLong("time_sent");
+                long timeout = resultSet.getLong("timeout");
+
+                groups.add(new ReceivedGroupMail(mailId, group, timeSent, timeout));
+            }
+
+            return groups;
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
     public @NotNull List<String> getGroupsWithMail() {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT DISTINCT group FROM group_mail;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT DISTINCT group FROM group_mail;")) {
             List<String> groups = new ArrayList<>();
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
@@ -76,7 +106,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public @NotNull List<String> getGroupMailIds(String group) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT mail_id FROM group_mail WHERE group = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT mail_id FROM group_mail WHERE group = ?;")) {
             stmt.setString(1, group);
 
             List<String> mailIds = new ArrayList<>();
@@ -96,11 +127,16 @@ public class MySqlStorage implements Storage {
 
     @Override
     public @NotNull List<String> getUnopenedGroupMailIds(UUID receiver, String group) {
-        // TODO: Consider checking timestamps
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT gm.mail_id FROM group_mail AS gm LEFT JOIN received_mail AS rm ON gm.mail_id = rm.mail_id WHERE rm.uuid = ? AND gm.group = ? AND (rm.state IS NULL OR rm.state = ?);")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT gm.mail_id FROM group_mail AS gm " +
+                "LEFT JOIN received_mail AS rm ON gm.mail_id = rm.mail_id " +
+                "WHERE rm.uuid = ? AND gm.group = ? " +
+                "AND (rm.state IS NULL OR rm.state = ?) " +
+                "AND (rm.timeout IS NULL OR rm.timeout > ?);")) {
             stmt.setString(1, receiver.toString());
             stmt.setString(2, group);
             stmt.setString(3, Mail.State.UNOPENED);
+            stmt.setLong(4, Instant.now().getEpochSecond());
 
             List<String> mailIds = new ArrayList<>();
             ResultSet resultSet = stmt.executeQuery();
@@ -119,9 +155,11 @@ public class MySqlStorage implements Storage {
 
     @Override
     public @NotNull List<String> getReceivedMailIds(UUID receiver) {
-        // TODO: Consider checking timestamps
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT mail_id FROM received_mail WHERE uuid = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT mail_id FROM received_mail WHERE uuid = ? " +
+                "AND (rm.timeout IS NULL OR rm.timeout > ?);")) {
             stmt.setString(1, receiver.toString());
+            stmt.setLong(2, Instant.now().getEpochSecond());
 
             List<String> mailIds = new ArrayList<>();
             ResultSet resultSet = stmt.executeQuery();
@@ -140,10 +178,12 @@ public class MySqlStorage implements Storage {
 
     @Override
     public @NotNull List<String> getReceivedMailIds(UUID receiver, String state) {
-        // TODO: Consider checking timestamps
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT mail_id FROM received_mail WHERE uuid = ? AND state = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT mail_id FROM received_mail WHERE uuid = ? AND state = ? " +
+                "AND (rm.timeout IS NULL OR rm.timeout > ?);")) {
             stmt.setString(1, receiver.toString());
             stmt.setString(2, state);
+            stmt.setLong(3, Instant.now().getEpochSecond());
 
             List<String> mailIds = new ArrayList<>();
             ResultSet resultSet = stmt.executeQuery();
@@ -162,7 +202,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public ReceivedMail getReceivedMail(UUID receiver, String mailId) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT state, favourited FROM received_mail WHERE uuid = ? AND mail_id = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM received_mail WHERE uuid = ? AND mail_id = ?;")) {
             stmt.setString(1, receiver.toString());
             stmt.setString(2, mailId);
 
@@ -170,9 +211,36 @@ public class MySqlStorage implements Storage {
             if (resultSet.next()) {
                 String state = resultSet.getString("state");
                 boolean favourited = resultSet.getBoolean("favourited");
+                long timeSent = resultSet.getLong("time_sent");
+                long timeout = resultSet.getLong("timeout");
 
-                new ReceivedMail(receiver, mailId, state, favourited);
+                new ReceivedMail(mailId, receiver, state, favourited, timeSent, timeout);
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    public List<ReceivedMail> getReceivedMail(UUID receiver) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM received_mail WHERE uuid = ?;")) {
+            stmt.setString(1, receiver.toString());
+
+            List<ReceivedMail> receivedMail = new ArrayList<>();
+            ResultSet resultSet = stmt.executeQuery();
+            while (resultSet.next()) {
+                String mailId = resultSet.getString("mail_id");
+                String state = resultSet.getString("state");
+                boolean favourited = resultSet.getBoolean("favourited");
+                long timeSent = resultSet.getLong("time_sent");
+                long timeout = resultSet.getLong("timeout");
+
+                receivedMail.add(new ReceivedMail(mailId, receiver, state, favourited, timeSent, timeout));
+            }
+
+            return receivedMail;
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -182,7 +250,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public boolean hasReceivedMail(UUID receiver, String mailId) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM received_mail WHERE uuid = ? AND mail_id = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM received_mail WHERE uuid = ? AND mail_id = ?;")) {
             stmt.setString(1, receiver.toString());
             stmt.setString(2, mailId);
 
@@ -197,7 +266,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public Mail loadMail(String id) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM mail WHERE id = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM mail_data WHERE id = ?;")) {
             stmt.setString(1, id);
 
             ResultSet resultSet = stmt.executeQuery();
@@ -217,7 +287,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public SimpleItemStack loadMailPreviewItem(String id) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT preview_item FROM mail WHERE id = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT preview_item FROM mail_data WHERE id = ?;")) {
             stmt.setString(1, id);
 
             ResultSet resultSet = stmt.executeQuery();
@@ -236,7 +307,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void saveMail(Mail mail) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("REPLACE INTO mail (id, type, preview_item, data) VALUES (?, ?, ?, ?);")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "REPLACE INTO mail_data (id, type, preview_item, data) VALUES (?, ?, ?, ?);")) {
             stmt.setString(1, mail.getId());
             stmt.setString(2, mail.getType());
             stmt.setString(3, LushMail.getGson().toJson(mail.getPreviewItem()));
@@ -250,9 +322,10 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void sendMail(String sender, UUID receiver, String mailId, long timeout) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("REPLACE INTO received_mail (uuid, mail_id, state, time_sent, timeout) VALUES (?, ?, ?, ?, ?);")) {
-            stmt.setString(1, receiver.toString());
-            stmt.setString(2, mailId);
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "REPLACE INTO received_mail (mail_id, uuid, state, time_sent, timeout) VALUES (?, ?, ?, ?, ?);")) {
+            stmt.setString(1, mailId);
+            stmt.setString(2, receiver.toString());
             stmt.setString(3, Mail.State.UNOPENED);
             stmt.setLong(4, Instant.now().getEpochSecond());
             stmt.setLong(5, timeout);
@@ -265,7 +338,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void setMailState(UUID uuid, String mailId, String state) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("UPDATE received_mail SET state = ? WHERE uuid = ? AND mail_id = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "UPDATE received_mail SET state = ? WHERE uuid = ? AND mail_id = ?;")) {
             stmt.setString(1, state);
             stmt.setString(2, uuid.toString());
             stmt.setString(3, mailId);
@@ -278,7 +352,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void removeMailFor(UUID uuid, String mailId) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("DELETE FROM received_mail WHERE uuid = ? AND mail_id = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "DELETE FROM received_mail WHERE uuid = ? AND mail_id = ?;")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, mailId);
 
@@ -290,19 +365,52 @@ public class MySqlStorage implements Storage {
 
     @Override
     public MailUser loadMailUser(UUID uuid) {
-        // TODO
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM mail_users WHERE uuid = ?;")) {
+            stmt.setString(1, uuid.toString());
+
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                String username = resultSet.getString("username");
+                List<UUID> ignoredUsers = getIgnoredUsers(uuid);
+                HashMap<String, String> receivedMailStates = getReceivedMail(uuid).stream()
+                    .collect(Collectors.toMap(ReceivedMail::getId, ReceivedMail::getState, (prev, next) -> next, HashMap::new));
+
+                return new MailUser(uuid, username, ignoredUsers, receivedMailStates);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 
     @Override
     public MailUser loadMailUser(String username) {
-        // TODO
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM mail_users WHERE username = ?;")) {
+            stmt.setString(1, username);
+
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                UUID uuid = UUID.fromString(resultSet.getString("uuid"));
+                List<UUID> ignoredUsers = getIgnoredUsers(uuid);
+                HashMap<String, String> receivedMailStates = getReceivedMail(uuid).stream()
+                    .collect(Collectors.toMap(ReceivedMail::getId, ReceivedMail::getState, (prev, next) -> next, HashMap::new));
+
+                return new MailUser(uuid, username, ignoredUsers, receivedMailStates);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
         return null;
     }
 
     @Override
     public OfflineMailUser loadOfflineMailUser(UUID uuid) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM mail_users WHERE uuid = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM mail_users WHERE uuid = ?;")) {
             stmt.setString(1, uuid.toString());
 
             ResultSet resultSet = stmt.executeQuery();
@@ -319,7 +427,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public OfflineMailUser loadOfflineMailUser(String username) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM mail_users WHERE username = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM mail_users WHERE username = ?;")) {
             stmt.setString(1, username);
 
             ResultSet resultSet = stmt.executeQuery();
@@ -336,7 +445,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void saveMailUser(MailUser mailUser) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("REPLACE INTO mail_users (uuid, username) VALUES (?, ?);")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "REPLACE INTO mail_users (uuid, username) VALUES (?, ?);")) {
             stmt.setString(1, mailUser.getUniqueId().toString());
             stmt.setString(2, mailUser.getUsername());
 
@@ -348,12 +458,13 @@ public class MySqlStorage implements Storage {
 
     @Override
     public List<UUID> getIgnoredUsers(@NotNull UUID uuid) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT ignored_uuid FROM ignored_users WHERE uuid = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT ignored_uuid FROM ignored_users WHERE uuid = ?;")) {
             stmt.setString(1, uuid.toString());
 
             List<UUID> ignoredUsers = new ArrayList<>();
             ResultSet resultSet = stmt.executeQuery();
-            while(resultSet.next()) {
+            while (resultSet.next()) {
                 UUID ignoredUser = UUID.fromString(resultSet.getString("ignored_uuid"));
                 ignoredUsers.add(ignoredUser);
             }
@@ -368,7 +479,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public boolean canSendMailTo(@NotNull UUID sender, @NotNull UUID receiver) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("SELECT * FROM ignored_users WHERE uuid = ? AND ignored_uuid = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT * FROM ignored_users WHERE uuid = ? AND ignored_uuid = ?;")) {
             stmt.setString(1, receiver.toString());
             stmt.setString(2, sender.toString());
 
@@ -383,7 +495,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void addIgnoredUser(@NotNull UUID uuid, @NotNull UUID ignoredUser) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("REPLACE INTO ignored_users (uuid, ignored_uuid) VALUES (?, ?);")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "REPLACE INTO ignored_users (uuid, ignored_uuid) VALUES (?, ?);")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, ignoredUser.toString());
 
@@ -395,7 +508,8 @@ public class MySqlStorage implements Storage {
 
     @Override
     public void removeIgnoredUser(@NotNull UUID uuid, @NotNull UUID ignoredUser) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement("DELETE FROM ignored_users WHERE uuid = ? AND ignored_uuid = ?;")) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "DELETE FROM ignored_users WHERE uuid = ? AND ignored_uuid = ?;")) {
             stmt.setString(1, uuid.toString());
             stmt.setString(2, ignoredUser.toString());
 

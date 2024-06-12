@@ -5,6 +5,7 @@ import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.config.StorageConfig;
 import org.lushplugins.lushmail.data.MailUser;
 import org.lushplugins.lushmail.data.OfflineMailUser;
+import org.lushplugins.lushmail.data.ReceivedGroupMail;
 import org.lushplugins.lushmail.data.ReceivedMail;
 import org.lushplugins.lushmail.mail.Mail;
 
@@ -39,8 +40,19 @@ public class StorageManager {
         }
     }
 
+    /**
+     * @param id The mail id to check
+     * @return Whether the mail id is available to be used
+     */
     public CompletableFuture<Boolean> isMailIdAvailable(String id) {
         return runAsync(() -> storage.isMailIdAvailable(id));
+    }
+
+    /**
+     * @return All group mails that have not timed out
+     */
+    public CompletableFuture<List<ReceivedGroupMail>> getGroupMails() {
+        return runAsync(() -> storage.getGroupMails());
     }
 
     public CompletableFuture<List<String>> getGroupsWithMail() {
