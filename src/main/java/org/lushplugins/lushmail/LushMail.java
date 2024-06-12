@@ -6,6 +6,7 @@ import org.bstats.bukkit.Metrics;
 import org.lushplugins.lushlib.LushLib;
 import org.lushplugins.lushlib.hook.Hook;
 import org.lushplugins.lushlib.plugin.SpigotPlugin;
+import org.lushplugins.lushmail.command.MailCommand;
 import org.lushplugins.lushmail.hook.LuckPermsHook;
 import org.lushplugins.lushmail.mail.MailManager;
 import org.lushplugins.lushmail.mail.MailTypes;
@@ -43,6 +44,8 @@ public final class LushMail extends SpigotPlugin {
 
         addHook("LuckPerms", () ->  registerHook(new LuckPermsHook()));
         getHooks().forEach(Hook::enable);
+
+        registerCommand(new MailCommand());
 
         new Metrics(this, 22228);
     }
