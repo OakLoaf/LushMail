@@ -1,8 +1,10 @@
 package org.lushplugins.lushmail.mail;
 
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 import org.lushplugins.lushlib.libraries.chatcolor.ChatColorHandler;
 import org.lushplugins.lushlib.utils.SimpleItemStack;
+import org.lushplugins.lushmail.util.StringUtils;
 
 public class TextMail extends Mail {
     private String text;
@@ -27,6 +29,10 @@ public class TextMail extends Mail {
 
     @Override
     public SimpleItemStack getPreviewItem() {
-        return null;
+        SimpleItemStack item = new SimpleItemStack(Material.PAPER);
+        item.setDisplayName("Message");
+        item.setLore(StringUtils.splitByCount(text, 50));
+
+        return item;
     }
 }

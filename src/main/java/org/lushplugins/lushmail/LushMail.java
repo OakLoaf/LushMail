@@ -38,7 +38,6 @@ public final class LushMail extends SpigotPlugin {
     public void onEnable() {
         LushLib.getInstance().enable(this);
         mailTypes = new MailTypes();
-
         storageManager = new StorageManager();
         mailManager = new MailManager();
 
