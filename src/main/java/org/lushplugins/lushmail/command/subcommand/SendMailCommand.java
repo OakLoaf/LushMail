@@ -10,6 +10,7 @@ import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.mail.TextMail;
 import org.lushplugins.lushmail.storage.StorageManager;
 
+import java.util.Arrays;
 import java.util.List;
 
 public class SendMailCommand extends SubCommand {
@@ -28,7 +29,7 @@ public class SendMailCommand extends SubCommand {
             return true;
         }
 
-        String message = args[1].strip();
+        String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).strip();
         StorageManager storageManager = LushMail.getInstance().getStorageManager();
         storageManager.loadUniqueId(args[0]).thenAccept(receiver -> {
             if (receiver == null) {
