@@ -25,8 +25,10 @@ dependencies {
 
     // Libraries
     implementation("org.bstats:bstats-bukkit:${findProperty("bStatsVersion")}")
+    implementation("com.zaxxer:HikariCP:${findProperty("hikariCPVersion")}")
     implementation("org.lushplugins:LushLib:${findProperty("lushLibVersion")}")
     implementation("com.mysql:mysql-connector-j:${findProperty("mysqlConnectorVersion")}")
+    implementation("org.xerial:sqlite-jdbc:${findProperty("sqliteConnectorVersion")}")
 }
 
 java {

@@ -1,8 +1,8 @@
 package org.lushplugins.lushmail.storage;
 
 import com.google.gson.JsonParser;
-import com.mysql.cj.jdbc.MysqlConnectionPoolDataSource;
-import com.mysql.cj.jdbc.MysqlDataSource;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.NotNull;
 import org.lushplugins.lushlib.utils.SimpleItemStack;
 import org.lushplugins.lushmail.LushMail;
@@ -13,36 +13,32 @@ import org.lushplugins.lushmail.data.ReceivedGroupMail;
 import org.lushplugins.lushmail.data.ReceivedMail;
 import org.lushplugins.lushmail.mail.Mail;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.io.*;
+import java.sql.*;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
+import java.util.logging.Level;
 import java.util.stream.Collectors;
 
+// TODO: Store sender in mail_data
 /*
  * Tables:
  *   mail_data: id, type, preview_item, data
  *   mail_users: uuid, username
  *   ignored_users: uuid, ignored_uuid
  *   received_mail: mail_id, uuid, state, favourited, time_sent, timeout
- *   group_mail: mail_id, group, time_sent, timeout
+ *   group_mail: mail_id, group_name, time_sent, timeout
  */
-public class MySqlStorage implements Storage {
-    private final MysqlDataSource dataSource;
+public class SQLStorage implements Storage {
+    private final DatabaseSource source;
 
-    public MySqlStorage(StorageConfig.MySqlInfo info) {
-        dataSource = initDataSource(
-            info.host(),
-            info.port(),
-            info.databaseName(),
-            info.user(),
-            info.password());
+    public SQLStorage(StorageConfig.StorageInfo info) {
+        this.source = initDataSource(info);
+    }
+
+    @Override
+    public void enable() {
+        setupDatabase("storage" + File.separator + "mysql_setup.sql");
     }
 
     @Override
@@ -63,14 +59,18 @@ public class MySqlStorage implements Storage {
     @Override
     public List<ReceivedGroupMail> getGroupMails() {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "SELECT * FROM group_mail WHERE (rm.timeout IS NULL OR rm.timeout > ?);")) {
+            """
+                SELECT * FROM group_mail AS gm
+                WHERE (gm.timeout IS NULL OR gm.timeout < 0  OR gm.timeout > ?);
+                """
+        )) {
             stmt.setLong(1, Instant.now().getEpochSecond());
 
             List<ReceivedGroupMail> groups = new ArrayList<>();
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
                 String mailId = resultSet.getString("mail_id");
-                String group = resultSet.getString("group");
+                String group = resultSet.getString("group_name");
                 long timeSent = resultSet.getLong("time_sent");
                 long timeout = resultSet.getLong("timeout");
 
@@ -88,11 +88,11 @@ public class MySqlStorage implements Storage {
     @Override
     public @NotNull List<String> getGroupsWithMail() {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "SELECT DISTINCT group FROM group_mail;")) {
+            "SELECT DISTINCT group_name FROM group_mail;")) {
             List<String> groups = new ArrayList<>();
             ResultSet resultSet = stmt.executeQuery();
             while (resultSet.next()) {
-                String group = resultSet.getString("group");
+                String group = resultSet.getString("group_name");
                 groups.add(group);
             }
 
@@ -107,7 +107,7 @@ public class MySqlStorage implements Storage {
     @Override
     public @NotNull List<String> getGroupMailIds(String group) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "SELECT mail_id FROM group_mail WHERE group = ?;")) {
+            "SELECT mail_id FROM group_mail WHERE group_name = ?;")) {
             stmt.setString(1, group);
 
             List<String> mailIds = new ArrayList<>();
@@ -128,11 +128,14 @@ public class MySqlStorage implements Storage {
     @Override
     public @NotNull List<String> getUnopenedGroupMailIds(UUID receiver, String group) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "SELECT gm.mail_id FROM group_mail AS gm " +
-                "LEFT JOIN received_mail AS rm ON gm.mail_id = rm.mail_id " +
-                "WHERE rm.uuid = ? AND gm.group = ? " +
-                "AND (rm.state IS NULL OR rm.state = ?) " +
-                "AND (rm.timeout IS NULL OR rm.timeout > ?);")) {
+            """
+                SELECT gm.mail_id FROM group_mail AS gm
+                LEFT JOIN received_mail AS rm ON gm.mail_id = rm.mail_id
+                WHERE rm.uuid = ? AND gm.group_name = ?
+                AND (rm.state IS NULL OR rm.state = ?)
+                AND (rm.timeout IS NULL OR rm.timeout < 0  OR rm.timeout > ?);
+                """
+        )) {
             stmt.setString(1, receiver.toString());
             stmt.setString(2, group);
             stmt.setString(3, Mail.State.UNOPENED);
@@ -156,8 +159,12 @@ public class MySqlStorage implements Storage {
     @Override
     public @NotNull List<String> getReceivedMailIds(UUID receiver) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "SELECT mail_id FROM received_mail WHERE uuid = ? " +
-                "AND (rm.timeout IS NULL OR rm.timeout > ?);")) {
+            """
+                SELECT mail_id FROM received_mail AS rm
+                WHERE uuid = ?
+                AND (rm.timeout IS NULL OR rm.timeout < 0  OR rm.timeout > ?);
+                """
+        )) {
             stmt.setString(1, receiver.toString());
             stmt.setLong(2, Instant.now().getEpochSecond());
 
@@ -179,8 +186,12 @@ public class MySqlStorage implements Storage {
     @Override
     public @NotNull List<String> getReceivedMailIds(UUID receiver, String state) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "SELECT mail_id FROM received_mail WHERE uuid = ? AND state = ? " +
-                "AND (rm.timeout IS NULL OR rm.timeout > ?);")) {
+            """
+                SELECT mail_id FROM received_mail AS rm
+                WHERE uuid = ? AND state = ?
+                AND (rm.timeout IS NULL OR rm.timeout < 0 OR rm.timeout > ?);
+                """
+        )) {
             stmt.setString(1, receiver.toString());
             stmt.setString(2, state);
             stmt.setLong(3, Instant.now().getEpochSecond());
@@ -323,12 +334,13 @@ public class MySqlStorage implements Storage {
     @Override
     public void sendMail(String sender, UUID receiver, String mailId, long timeout) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "REPLACE INTO received_mail (mail_id, uuid, state, time_sent, timeout) VALUES (?, ?, ?, ?, ?);")) {
+            "REPLACE INTO received_mail (mail_id, uuid, state, favourited, time_sent, timeout) VALUES (?, ?, ?, ?, ?, ?);")) {
             stmt.setString(1, mailId);
             stmt.setString(2, receiver.toString());
             stmt.setString(3, Mail.State.UNOPENED);
-            stmt.setLong(4, Instant.now().getEpochSecond());
-            stmt.setLong(5, timeout);
+            stmt.setBoolean(4, false);
+            stmt.setLong(5, Instant.now().getEpochSecond());
+            stmt.setLong(6, timeout);
 
             stmt.execute();
         } catch (SQLException e) {
@@ -444,7 +456,7 @@ public class MySqlStorage implements Storage {
     }
 
     @Override
-    public void saveMailUser(MailUser mailUser) {
+    public void saveOfflineMailUser(OfflineMailUser mailUser) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
             "REPLACE INTO mail_users (uuid, username) VALUES (?, ?);")) {
             stmt.setString(1, mailUser.getUniqueId().toString());
@@ -521,31 +533,62 @@ public class MySqlStorage implements Storage {
 
     public Connection conn() {
         try {
-            return dataSource.getConnection();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
+            return source.getConnection();
+        } catch (SQLException e) {
+            e.printStackTrace();
             return null;
         }
     }
 
-    private MysqlDataSource initDataSource(String host, int port, String dbName, String user, String password) {
-        MysqlDataSource dataSource = new MysqlConnectionPoolDataSource();
-        dataSource.setServerName(host);
-        dataSource.setPortNumber(port);
-        dataSource.setDatabaseName(dbName);
-        dataSource.setUser(user);
-        dataSource.setPassword(password);
-        testDataSource(dataSource);
-        return dataSource;
+    protected DatabaseSource initDataSource(StorageConfig.StorageInfo info) {
+        StorageConfig.MySqlInfo sqlInfo = (StorageConfig.MySqlInfo) info;
+
+        Properties properties = new Properties();
+        properties.setProperty("dataSourceClassName", "com.mysql.cj.jdbc.MysqlDataSource");
+        properties.setProperty("dataSource.serverName", sqlInfo.host());
+        properties.setProperty("dataSource.portNumber", String.valueOf(sqlInfo.port()));
+        properties.setProperty("dataSource.user", sqlInfo.user());
+        properties.setProperty("dataSource.password", sqlInfo.password());
+        properties.setProperty("dataSource.databaseName", sqlInfo.databaseName());
+
+        HikariConfig hikariConfig = new HikariConfig(properties);
+        hikariConfig.setMaximumPoolSize(8);
+
+        DatabaseSource source = new DatabaseSource(new HikariDataSource(hikariConfig));
+        testDataSource(source);
+
+        return source;
     }
 
-    private void testDataSource(DataSource dataSource) {
-        try (Connection conn = dataSource.getConnection()) {
+    protected void testDataSource(DatabaseSource source) {
+        try (Connection conn = source.getConnection()) {
             if (!conn.isValid(1000)) {
                 throw new SQLException("Could not establish database connection.");
             }
         } catch (SQLException e) {
             e.printStackTrace();
         }
+    }
+
+    protected void setupDatabase(String fileName) {
+        String setup;
+        try (InputStream in = SQLStorage.class.getClassLoader().getResourceAsStream(fileName)) {
+            setup = new BufferedReader(new InputStreamReader(in)).lines().collect(Collectors.joining(""));
+        } catch (IOException e) {
+            LushMail.getInstance().getLogger().log(Level.SEVERE, "Could not read db setup file.", e);
+            e.printStackTrace();
+            return;
+        }
+
+        String[] statements = setup.split("\\|");
+        for (String statement : statements) {
+            try (Connection conn = source.getConnection(); PreparedStatement stmt = conn.prepareStatement(statement)) {
+                stmt.execute();
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        }
+
+        LushMail.getInstance().getLogger().info("Database setup complete.");
     }
 }

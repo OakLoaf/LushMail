@@ -60,7 +60,7 @@ public interface Storage {
 
     @Nullable OfflineMailUser loadOfflineMailUser(String username);
 
-    void saveMailUser(MailUser mailUser);
+    void saveOfflineMailUser(OfflineMailUser mailUser);
 
     @Nullable List<UUID> getIgnoredUsers(UUID uuid);
 

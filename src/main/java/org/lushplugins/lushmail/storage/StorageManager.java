@@ -1,5 +1,7 @@
 package org.lushplugins.lushmail.storage;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.lushplugins.lushlib.utils.SimpleItemStack;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.config.StorageConfig;
@@ -29,9 +31,11 @@ public class StorageManager {
 
         StorageConfig config = new StorageConfig();
         switch (config.getStorageType()) {
-            case "mysql", "mariadb" -> storage = new MySqlStorage((StorageConfig.MySqlInfo) config.getStorageInfo());
-            case "sqlite" -> {}
+            case "mysql", "mariadb" -> storage = new SQLStorage(config.getStorageInfo());
+            case "sqlite" -> storage = new SQLiteStorage(config.getStorageInfo());
         }
+
+        storage.enable();
     }
 
     public void disable() {
@@ -117,6 +121,11 @@ public class StorageManager {
             UUID uuid = UUID.fromString(uuidOrUsername);
             return CompletableFuture.completedFuture(uuid);
         } catch (IllegalArgumentException e) {
+            Player player = Bukkit.getPlayer(uuidOrUsername);
+            if (player != null) {
+                return CompletableFuture.completedFuture(player.getUniqueId());
+            }
+
             return LushMail.getInstance().getStorageManager().loadOfflineMailUser(uuidOrUsername).thenApply(OfflineMailUser::getUniqueId);
         }
     }
@@ -137,8 +146,8 @@ public class StorageManager {
         return runAsync(() -> storage.loadOfflineMailUser(username));
     }
 
-    public CompletableFuture<Void> saveMailUser(MailUser mailUser) {
-        return runAsync(() -> storage.saveMailUser(mailUser));
+    public CompletableFuture<Void> saveOfflineMailUser(OfflineMailUser mailUser) {
+        return runAsync(() -> storage.saveOfflineMailUser(mailUser));
     }
 
     public CompletableFuture<List<UUID>> getIgnoredUsers(UUID uuid) {
@@ -159,7 +168,14 @@ public class StorageManager {
 
     private <T> CompletableFuture<T> runAsync(Callable<T> callable) {
         CompletableFuture<T> future = new CompletableFuture<>();
-        threads.submit(callable);
+        threads.submit(() -> {
+            try {
+                future.complete(callable.call());
+            } catch (Throwable e) {
+                e.printStackTrace();
+                future.completeExceptionally(e);
+            }
+        });
         return future;
     }
 
