@@ -59,7 +59,7 @@ public class SendMailCommand extends SubCommand {
                         senderName = player.getName();
                     } else {
                         senderId = "console";
-                        senderName = "console";
+                        senderName = "Admin"; // TODO: Get from config
                     }
 
                     storageManager.saveMail(new TextMail(id, message, senderName))
