@@ -5,6 +5,12 @@ import java.util.List;
 
 public class StringUtils {
 
+    /**
+     * Splits a string into multiple strings of count + 10
+     * @param string string to split
+     * @param count amount to split by
+     * @return List of split strings
+     */
     public static List<String> splitByCount(String string, int count) {
         List<String> strings = new ArrayList<>();
 

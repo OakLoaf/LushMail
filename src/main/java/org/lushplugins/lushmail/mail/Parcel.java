@@ -30,6 +30,11 @@ public class Parcel extends Mail {
     }
 
     @Override
+    public void preview(Player player) {
+
+    }
+
+    @Override
     public SimpleItemStack getPreviewItem() {
         return null;
     }

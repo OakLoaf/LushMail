@@ -2,9 +2,12 @@ package org.lushplugins.lushmail.mail;
 
 import org.bukkit.Material;
 import org.bukkit.entity.Player;
-import org.lushplugins.lushlib.libraries.chatcolor.ChatColorHandler;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.BookMeta;
 import org.lushplugins.lushlib.utils.SimpleItemStack;
 import org.lushplugins.lushmail.util.StringUtils;
+
+import java.util.List;
 
 public class TextMail extends Mail {
     private String text;
@@ -29,13 +32,26 @@ public class TextMail extends Mail {
 
     @Override
     public void open(Player player) {
-        ChatColorHandler.sendMessage(player, text);
+        preview(player);
+    }
+
+    @Override
+    public void preview(Player player) {
+        ItemStack book = new ItemStack(Material.WRITTEN_BOOK);
+        if (book.getItemMeta() instanceof BookMeta bookMeta) {
+            List<String> pages = StringUtils.splitByCount(text, 260);
+            bookMeta.setPages(pages);
+
+            book.setItemMeta(bookMeta);
+        }
+
+        player.openBook(book);
     }
 
     @Override
     public SimpleItemStack getPreviewItem() {
         SimpleItemStack item = new SimpleItemStack(Material.WRITABLE_BOOK);
-        item.setDisplayName("&fLetter from ");
+        item.setDisplayName("&f" + this.getTitle());
         item.setLore(StringUtils.splitByCount(StringUtils.shortenString(text, 130), 50).stream().map(str -> "&7&o" + str).toList());
 
         return item;

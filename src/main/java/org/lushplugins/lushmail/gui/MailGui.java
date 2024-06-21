@@ -55,10 +55,19 @@ public class MailGui extends SimpleGui {
 
                     List<String> lore = item.getLore() != null ? item.getLore() : new ArrayList<>();
                     lore.add(" ");
+                    lore.add("&#ffde8aʟᴇғᴛ ᴄʟɪᴄᴋ &7- Open mail");
+                    lore.add("&#ffde8aʀɪɢʜᴛ ᴄʟɪᴄᴋ &7- Preview mail");
+                    lore.add(" ");
                     lore.add("&8Mail ID: " + mailId);
                     item.setLore(lore);
 
-                    setItem(slot, item.asItemStack(this.getPlayer()));
+                    setItem(slot, item.asItemStack(this.getPlayer())); // TODO: Remove once addButton is fixed
+                    addButton(slot, item.asItemStack(this.getPlayer()), (event) -> {
+                        switch (event.getAction()) {
+                            case PICKUP_HALF -> storageManager.loadMail(mailId).thenAccept(mail -> mail.preview(this.getPlayer()));
+                            case PICKUP_ALL -> storageManager.loadMail(mailId).thenAccept(mail -> mail.open(this.getPlayer()));
+                        }
+                    });
                 });
             }
         });

@@ -19,6 +19,11 @@ public class CommandMail extends Mail {
     }
 
     @Override
+    public void preview(Player player) {
+
+    }
+
+    @Override
     public SimpleItemStack getPreviewItem() {
         return null;
     }

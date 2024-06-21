@@ -1,8 +1,6 @@
 package org.lushplugins.lushmail.mail;
 
 import org.bukkit.entity.Player;
-import org.jetbrains.annotations.Nullable;
-import org.lushplugins.lushlib.gui.inventory.SimpleGui;
 import org.lushplugins.lushlib.utils.SimpleItemStack;
 
 public abstract class Mail {
@@ -12,10 +10,7 @@ public abstract class Mail {
     private final String title;
 
     public Mail(String id, String type, String sender) {
-        this.id = id;
-        this.type = type;
-        this.sender = sender;
-        this.title = null;
+        this(id, type, sender, null);
     }
 
     public Mail(String id, String type, String sender, String title) {
@@ -47,22 +42,28 @@ public abstract class Mail {
     }
 
     /**
+     * @return The title of this mail
+     */
+    public String getTitle() {
+        return title;
+    }
+
+    /**
      * Open this mail for a player
      * @param player The player opening the mail
      */
     public abstract void open(Player player);
 
     /**
+     * Preview the mail for a player
+     * @param player The player previewing the mail
+     */
+    public abstract void preview(Player player);
+
+    /**
      * @return The preview item to be shown in the mail gui
      */
     public abstract SimpleItemStack getPreviewItem();
-
-    /**
-     * @return The preview
-     */
-    public @Nullable SimpleGui getPreviewGui() {
-        return null;
-    }
 
     public static class State {
         public static final String OPENED = "opened";
