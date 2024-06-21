@@ -1,7 +1,7 @@
 plugins {
     java
     `maven-publish`
-    id("com.github.johnrengelman.shadow") version("8.1.1")
+    id("io.github.goooler.shadow") version("8.1.7")
 }
 
 group = "org.lushplugins"
@@ -31,14 +31,7 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:${findProperty("sqliteConnectorVersion")}")
 }
 
-java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
-}
-
 tasks {
-    withType<JavaCompile> {
-        options.encoding = "UTF-8"
-    }
 
     shadowJar {
         relocate("org.bstats", "org.lushplugins.lushrewards.libraries.bstats")
@@ -60,6 +53,23 @@ tasks {
         inputs.property("version", rootProject.version)
         filesMatching("plugin.yml") {
             expand("version" to rootProject.version)
+        }
+    }
+}
+
+allprojects {
+    apply(plugin = "java")
+
+    group = rootProject.group
+    version = rootProject.version
+
+    java {
+        toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+    }
+
+    tasks {
+        withType<JavaCompile> {
+            options.encoding = "UTF-8"
         }
     }
 }
