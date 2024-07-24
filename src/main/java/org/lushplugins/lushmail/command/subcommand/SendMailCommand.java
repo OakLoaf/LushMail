@@ -31,14 +31,14 @@ public class SendMailCommand extends SubCommand {
 
         String message = String.join(" ", Arrays.copyOfRange(args, 1, args.length)).strip();
         StorageManager storageManager = LushMail.getInstance().getStorageManager();
-        storageManager.loadUniqueId(args[0]).thenAccept(receiver -> {
-            if (receiver == null) {
+        storageManager.loadUniqueId(args[0]).thenAccept(receiverUuid -> {
+            if (receiverUuid == null) {
                 // TODO: Add configurable message
                 ChatColorHandler.sendMessage(sender, "Could not find this player");
                 return;
             }
 
-            LushMail.getInstance().getMailManager().canSendMailTo(sender, receiver).thenAccept(canSend -> {
+            LushMail.getInstance().getMailManager().canSendMailTo(sender, receiverUuid).thenAccept(canSend -> {
                 if (!canSend) {
                     // TODO: Add configurable message
                     ChatColorHandler.sendMessage(sender, "You cannot send mail to this player");
@@ -63,7 +63,16 @@ public class SendMailCommand extends SubCommand {
                     }
 
                     storageManager.saveMail(new TextMail(id, message, senderName))
-                        .thenAccept(ignored -> storageManager.sendMail(senderId, receiver, id));
+                        .thenAccept(ignored -> storageManager.sendMail(senderId, receiverUuid, id));
+
+                    // TODO: Add configurable message
+                    ChatColorHandler.sendMessage(sender, "Sent mail to " + args[0]);
+
+                    Player receiver = Bukkit.getPlayer(receiverUuid);
+                    if (receiver != null) {
+                        // TODO: Add configurable message
+                        ChatColorHandler.sendMessage(sender, "You've received new mail from " + senderName + "!");
+                    }
                 });
             });
         });
