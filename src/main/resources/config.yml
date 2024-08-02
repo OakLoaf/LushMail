@@ -1,2 +1,11 @@
 # The name that will appear for mail received from the console
 console-name: Admin
+
+messages:
+  no-permissions: "&cYou don't have permissions for this command"
+  invalid-args: "&cInvalid arguments try: %command%"
+  received-mail: "&aYou have received new mail from %sender%!"
+  ignored: "&cYou cannot send mail to %player%"
+  unignore: "&aYou can now receive mail from %player%"
+  already-ignoring: "&cYou are already ignoring %player%"
+  not-ignoring: "&cYou are not currently ignoring %player%"
