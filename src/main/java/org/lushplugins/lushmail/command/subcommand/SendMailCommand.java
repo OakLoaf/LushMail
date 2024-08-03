@@ -69,7 +69,7 @@ public class SendMailCommand extends SubCommand {
 
                     Player receiver = Bukkit.getPlayer(receiverUuid);
                     if (receiver != null) {
-                        ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("received-mail", "&aYou have received new mail from %sender%!")
+                        ChatColorHandler.sendMessage(receiver, LushMail.getInstance().getConfigManager().getMessage("received-mail", "&aYou have received new mail from %sender%!")
                             .replace("%sender%", senderName));
                     }
                 });
