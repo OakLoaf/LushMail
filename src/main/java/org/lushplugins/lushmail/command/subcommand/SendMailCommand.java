@@ -34,7 +34,7 @@ public class SendMailCommand extends SubCommand {
         storageManager.loadUniqueId(args[0]).thenAccept(receiverUuid -> {
             if (receiverUuid == null) {
                 ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("invalid-player", "&cCould not find player '%player%'")
-                    .replace("%player%", args[0]));;
+                    .replace("%player%", args[0]));
                 return;
             }
 
