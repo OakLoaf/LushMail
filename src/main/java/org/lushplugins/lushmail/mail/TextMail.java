@@ -6,7 +6,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.BookMeta;
 import org.lushplugins.lushlib.utils.SimpleItemStack;
 import org.lushplugins.lushmail.LushMail;
-import org.lushplugins.lushmail.config.ConfigManager;
 import org.lushplugins.lushmail.util.StringUtils;
 
 import java.util.List;
