@@ -1,6 +1,33 @@
 # The name that will appear for mail received from the console
 console-name: Admin
 
+gui:
+  # Gui Format
+  # - M: Mail Slot
+  # - #: Border
+  format:
+    - "MMMMMMMMM"
+    - "MMMMMMMMM"
+    - "MMMMMMMMM"
+    - "MMMMMMMMM"
+    - "MMMMMMMMM"
+    - "#########"
+  items:
+    text-mail:
+      material: WRITABLE_BOOK
+      display-name: "&f%title%"
+    preview-mail:
+      lore:
+        - " "
+        - "&#ffde8aʟᴇғᴛ ᴄʟɪᴄᴋ &7- Open mail"
+        - "&#ffde8aʀɪɢʜᴛ ᴄʟɪᴄᴋ &7- Preview mail"
+        - " "
+        - "&8Mail ID: %mail_id%"
+    border:
+      material: WHITE_STAINED_GLASS_PANE
+      display-name: "&7"
+
+
 messages:
   no-permissions: "&cYou don't have permissions for this command"
   invalid-args: "&cInvalid arguments try: %command%"
