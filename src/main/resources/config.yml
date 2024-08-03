@@ -27,7 +27,6 @@ gui:
       material: WHITE_STAINED_GLASS_PANE
       display-name: "&7"
 
-
 messages:
   no-permissions: "&cYou don't have permissions for this command"
   invalid-args: "&cInvalid arguments try: %command%"
