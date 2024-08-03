@@ -7,6 +7,7 @@ import org.lushplugins.lushlib.LushLib;
 import org.lushplugins.lushlib.hook.Hook;
 import org.lushplugins.lushlib.plugin.SpigotPlugin;
 import org.lushplugins.lushmail.command.MailCommand;
+import org.lushplugins.lushmail.config.ConfigManager;
 import org.lushplugins.lushmail.hook.LuckPermsHook;
 import org.lushplugins.lushmail.listener.PlayerListener;
 import org.lushplugins.lushmail.mail.MailManager;
@@ -20,8 +21,9 @@ public final class LushMail extends SpigotPlugin {
     private static final Random RANDOM = new Random();
     private static LushMail plugin;
 
-    private StorageManager storageManager;
+    private ConfigManager configManager;
     private MailTypes mailTypes;
+    private StorageManager storageManager;
     private MailManager mailManager;
 
     static {
@@ -38,6 +40,10 @@ public final class LushMail extends SpigotPlugin {
     @Override
     public void onEnable() {
         LushLib.getInstance().enable(this);
+
+        configManager = new ConfigManager();
+        configManager.reloadConfig();
+
         mailTypes = new MailTypes();
         storageManager = new StorageManager();
         mailManager = new MailManager();
@@ -64,6 +70,10 @@ public final class LushMail extends SpigotPlugin {
         }
 
         LushLib.getInstance().disable();
+    }
+
+    public ConfigManager getConfigManager() {
+        return configManager;
     }
 
     public MailTypes getMailTypes() {

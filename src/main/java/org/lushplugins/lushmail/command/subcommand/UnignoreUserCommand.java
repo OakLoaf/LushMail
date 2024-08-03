@@ -20,35 +20,34 @@ public class UnignoreUserCommand extends SubCommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args, @NotNull String[] fullArgs) {
         if (!(sender instanceof Player player)) {
-            // TODO: Add configurable message
             ChatColorHandler.sendMessage(sender, "Only players can use this command");
             return true;
         }
 
         if (args.length < 1) {
-            // TODO: Add configurable message
-            ChatColorHandler.sendMessage(sender, "Invalid arguments try: /mail unignore <username>");
+            ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("invalid-args", "&cInvalid arguments try: %command%")
+                .replace("%command%", "/mail unignore <username>"));
             return true;
         }
 
         StorageManager storageManager = LushMail.getInstance().getStorageManager();
         storageManager.loadUniqueId(args[0]).thenAccept(toIgnore -> {
             if (toIgnore == null) {
-                // TODO: Add configurable message
-                ChatColorHandler.sendMessage(sender, "Could not find this player");
+                ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("invalid-player", "&cCould not find player '%player%'")
+                    .replace("%player%", args[0]));
                 return;
             }
 
             storageManager.canSendMailTo(toIgnore, player.getUniqueId()).thenAccept(canSend -> {
                 if (canSend) {
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(sender, "You are not ignoring this player");
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("not-ignoring", "&cYou are not currently ignoring %player%")
+                        .replace("%player%", args[0]));
                     return;
                 }
 
                 storageManager.removeIgnoredUser(player.getUniqueId(), toIgnore).thenAccept(ignored -> {
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(sender, "You can now receive mail from '" + args[0] + "'");
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("unignore-player", "&aYou can now receive mail from %player%")
+                        .replace("%player%", args[0]));
                 });
             });
         });

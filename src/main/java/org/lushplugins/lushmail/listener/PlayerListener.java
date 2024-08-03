@@ -26,8 +26,7 @@ public class PlayerListener implements EventListener {
             LushMail.getInstance().getMailManager().getAllUnopenedMailIds(player).thenAccept(mailIds -> {
                 int mailCount = mailIds.size();
                 if (mailCount > 0) {
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(player, "You have %count% new mail"
+                    ChatColorHandler.sendMessage(player, LushMail.getInstance().getConfigManager().getMessage("received-offline-mail", "&aYou have %count% new mail")
                         .replace("%count%", String.valueOf(mailCount)));
                 }
             });

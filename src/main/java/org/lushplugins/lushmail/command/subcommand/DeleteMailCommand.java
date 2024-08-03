@@ -21,14 +21,13 @@ public class DeleteMailCommand extends SubCommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args, @NotNull String[] fullArgs) {
         if (!(sender instanceof Player player)) {
-            // TODO: Add configurable message
             ChatColorHandler.sendMessage(sender, "Only players can use this command");
             return true;
         }
 
         if (args.length < 1 || args[0].isBlank()) {
-            // TODO: Add configurable message
-            ChatColorHandler.sendMessage(sender, "Invalid arguments try: /mail delete <mail_id>");
+            ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("invalid-args", "&cInvalid arguments try: %command%")
+                .replace("%command%", "/mail delete <mail_id>"));
             return true;
         }
 
@@ -37,21 +36,19 @@ public class DeleteMailCommand extends SubCommand {
         if (!mailId.equals("all")) {
             storageManager.hasReceivedMail(player.getUniqueId(), mailId).thenAccept(received -> {
                 if (!received) {
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(sender, "Could not find this mail in your mail list");
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("mail-not-found", "&cCould not find this mail in your mail list"));
                     return;
                 }
 
                 storageManager.removeMailFor(player.getUniqueId(), mailId).thenAccept(ignored -> {
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(sender, "Mail '" + mailId + "' has been removed from your mail list");
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("deleted-mail", "&aRemoved mail '%mail_id%' from your mail list!")
+                        .replace("%mail_id%", mailId));
                 });
             });
         } else {
             storageManager.getReceivedMailIds(player.getUniqueId()).thenAccept(ids -> {
                 if (ids.isEmpty()) {
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(sender, "Could not find any mail in your mail list");
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("no-mail", "&cCould not find any mail in your mail list"));
                     return;
                 }
 
@@ -60,8 +57,7 @@ public class DeleteMailCommand extends SubCommand {
                     storageManager.removeMailFor(player.getUniqueId(), id);
                 }
 
-                // TODO: Add configurable message
-                ChatColorHandler.sendMessage(sender, "Your mail list has been emptied");
+                ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("deleted-all-mail", "&aYour mail list has been cleared!"));
             });
         }
 

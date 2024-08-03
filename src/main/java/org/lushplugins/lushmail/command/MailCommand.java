@@ -22,7 +22,6 @@ public class MailCommand extends Command {
     @Override
     public boolean execute(@NotNull CommandSender sender, org.bukkit.command.@NotNull Command command, @NotNull String label, @NotNull String[] args, @NotNull String[] fullArgs) {
         if (!(sender instanceof Player player)) {
-            // TODO: Add configurable message
             ChatColorHandler.sendMessage(sender, "Only players can use this command");
             return true;
         }

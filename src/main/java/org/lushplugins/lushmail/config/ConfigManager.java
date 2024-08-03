@@ -7,11 +7,11 @@ import org.lushplugins.lushmail.LushMail;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class MainConfig {
+public class ConfigManager {
     private String consoleName;
     private final ConcurrentHashMap<String, String> messages = new ConcurrentHashMap<>();
 
-    public MainConfig() {
+    public ConfigManager() {
         LushMail.getInstance().saveDefaultConfig();
     }
 
@@ -38,5 +38,9 @@ public class MainConfig {
 
     public String getMessage(String key) {
         return messages.get(key);
+    }
+
+    public String getMessage(String key, String def) {
+        return messages.getOrDefault(key, def);
     }
 }

@@ -24,8 +24,8 @@ public class SendMailCommand extends SubCommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull org.bukkit.command.Command command, @NotNull String label, @NotNull String[] args, @NotNull String[] fullArgs) {
         if (args.length < 2 || args[1].isBlank()) {
-            // TODO: Add configurable message
-            ChatColorHandler.sendMessage(sender, "Invalid arguments try: /mail send <username> <message>");
+            ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("invalid-args", "&cInvalid arguments try: %command%")
+                .replace("%command%", "/mail send <username> <message>"));
             return true;
         }
 
@@ -33,22 +33,21 @@ public class SendMailCommand extends SubCommand {
         StorageManager storageManager = LushMail.getInstance().getStorageManager();
         storageManager.loadUniqueId(args[0]).thenAccept(receiverUuid -> {
             if (receiverUuid == null) {
-                // TODO: Add configurable message
-                ChatColorHandler.sendMessage(sender, "Could not find this player");
+                ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("invalid-player", "&cCould not find player '%player%'")
+                    .replace("%player%", args[0]));;
                 return;
             }
 
             LushMail.getInstance().getMailManager().canSendMailTo(sender, receiverUuid).thenAccept(canSend -> {
                 if (!canSend) {
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(sender, "You cannot send mail to this player");
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("ignored", "&cYou cannot send mail to %player%")
+                        .replace("%player%", args[0]));
                     return;
                 }
 
                 LushMail.getInstance().getMailManager().generateUniqueMailId().thenAccept(id -> {
                     if (id == null) {
-                        // TODO: Add configurable message
-                        ChatColorHandler.sendMessage(sender, "Something went wrong when trying to send mail");
+                        ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("failed-to-send-mail", "&cSomething went wrong whilst trying to send mail"));
                         return;
                     }
 
@@ -59,19 +58,19 @@ public class SendMailCommand extends SubCommand {
                         senderName = player.getName();
                     } else {
                         senderId = "console";
-                        senderName = "Admin"; // TODO: Get from config
+                        senderName = LushMail.getInstance().getConfigManager().getConsoleName();
                     }
 
                     storageManager.saveMail(new TextMail(id, message, senderName))
                         .thenAccept(ignored -> storageManager.sendMail(senderId, receiverUuid, id));
 
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(sender, "Sent mail to " + args[0]);
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("sent-mail", "&aSent mail to %receiver%")
+                        .replace("%receiver%", args[0]));
 
                     Player receiver = Bukkit.getPlayer(receiverUuid);
                     if (receiver != null) {
-                        // TODO: Add configurable message
-                        ChatColorHandler.sendMessage(sender, "You've received new mail from " + senderName + "!");
+                        ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("received-mail", "&aYou have received new mail from %sender%!")
+                            .replace("%sender%", senderName));
                     }
                 });
             });

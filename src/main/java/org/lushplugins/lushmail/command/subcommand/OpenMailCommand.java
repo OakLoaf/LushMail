@@ -21,14 +21,13 @@ public class OpenMailCommand extends SubCommand {
     @Override
     public boolean execute(@NotNull CommandSender sender, @NotNull Command command, @NotNull String label, @NotNull String[] args, @NotNull String[] fullArgs) {
         if (!(sender instanceof Player player)) {
-            // TODO: Add configurable message
             ChatColorHandler.sendMessage(sender, "Only players can use this command");
             return true;
         }
 
         if (args.length < 1 || args[0].isBlank()) {
-            // TODO: Add configurable message
-            ChatColorHandler.sendMessage(sender, "Invalid arguments try: /mail open <mail_id>");
+            ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("invalid-args", "&cInvalid arguments try: %command%")
+                .replace("%command%", "/mail open <mail_id>"));
             return true;
         }
 
@@ -48,8 +47,7 @@ public class OpenMailCommand extends SubCommand {
         } else {
             storageManager.getReceivedMail(receiver, mailIdRaw).thenAccept(mail -> {
                 if (mail == null) {
-                    // TODO: Add configurable message
-                    ChatColorHandler.sendMessage(sender, "Could not find this mail in your mail list");
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("mail-not-found", "&cCould not find this mail in your mail list"));
                     return;
                 }
 
