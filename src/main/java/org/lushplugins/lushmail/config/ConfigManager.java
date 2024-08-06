@@ -71,7 +71,7 @@ public class ConfigManager {
     }
 
     public @Nullable SimpleItemStack getGuiItem(String key) {
-        return guiItems.get(key);
+        return guiItems.get(key).clone();
     }
 
     public @Nullable String getMessage(String key) {
