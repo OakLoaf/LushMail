@@ -39,7 +39,7 @@ public class MailGui extends SimpleGui {
 
                     List<String> lore = item.getLore() != null ? new ArrayList<>(item.getLore()) : new ArrayList<>();
                     DisplayItemStack.Builder previewItem = DisplayItemStack.Builder.of(item);
-                    DisplayItemStack previewLayout = LushMail.getInstance().getConfigManager().getGuiItem("text-mail");
+                    DisplayItemStack previewLayout = LushMail.getInstance().getConfigManager().getGuiItem("preview-mail");
                     if (previewLayout != null) {
                         List<String> previewLore = previewLayout.getLore();
                         if (previewLore != null) {
