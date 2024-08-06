@@ -40,9 +40,11 @@ public interface Storage {
 
     boolean hasReceivedMail(UUID receiver, String mailId);
 
-    @Nullable Mail loadMail(String id);
-
     @Nullable SimpleItemStack loadMailPreviewItem(String id);
+
+    void regenerateMailPreviewItems();
+
+    @Nullable Mail loadMail(String id);
 
     void saveMail(Mail mail);
 

@@ -276,6 +276,45 @@ public class SQLStorage implements Storage {
     }
 
     @Override
+    public SimpleItemStack loadMailPreviewItem(String id) {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT preview_item FROM mail_data WHERE id = ?;")) {
+            stmt.setString(1, id);
+
+            ResultSet resultSet = stmt.executeQuery();
+            if (resultSet.next()) {
+                String jsonRaw = resultSet.getString("preview_item");
+                if (jsonRaw != null) {
+                    return LushMail.getGson().fromJson(JsonParser.parseString(jsonRaw), SimpleItemStack.class);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+
+        return null;
+    }
+
+    @Override
+    public void regenerateMailPreviewItems() {
+        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
+            "SELECT id FROM mail_data;")) {
+
+            ResultSet results = stmt.executeQuery();
+            while (results.next()) {
+                String id = results.getString("id");
+
+                Mail mail = loadMail(id);
+                if (mail != null) {
+                    saveMail(mail);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    @Override
     public Mail loadMail(String id) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
             "SELECT * FROM mail_data WHERE id = ?;")) {
@@ -287,26 +326,6 @@ public class SQLStorage implements Storage {
                 String jsonRaw = resultSet.getString("data");
                 if (jsonRaw != null) {
                     return LushMail.getInstance().getMailTypes().constructMail(type, JsonParser.parseString(jsonRaw));
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return null;
-    }
-
-    @Override
-    public SimpleItemStack loadMailPreviewItem(String id) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "SELECT preview_item FROM mail_data WHERE id = ?;")) {
-            stmt.setString(1, id);
-
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                String jsonRaw = resultSet.getString("preview_item");
-                if (jsonRaw != null) {
-                    return LushMail.getGson().fromJson(JsonParser.parseString(jsonRaw), SimpleItemStack.class);
                 }
             }
         } catch (SQLException e) {
