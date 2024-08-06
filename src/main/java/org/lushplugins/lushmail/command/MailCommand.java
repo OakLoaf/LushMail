@@ -15,7 +15,7 @@ public class MailCommand extends Command {
         addSubCommand(new DeleteMailCommand());
         addSubCommand(new IgnoreUserCommand());
         addSubCommand(new OpenMailCommand());
-        addSubCommand(new ReloadSubCommand());
+        addSubCommand(new ReloadCommand());
         addSubCommand(new SendMailCommand());
         addSubCommand(new UnignoreUserCommand());
     }
