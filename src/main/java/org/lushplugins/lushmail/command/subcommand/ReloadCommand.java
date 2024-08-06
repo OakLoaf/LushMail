@@ -9,9 +9,9 @@ import org.lushplugins.lushmail.LushMail;
 
 import java.util.logging.Level;
 
-public class ReloadSubCommand extends SubCommand {
+public class ReloadCommand extends SubCommand {
 
-    public ReloadSubCommand() {
+    public ReloadCommand() {
         super("reload");
         addRequiredPermission("lushmail.reload");
     }
