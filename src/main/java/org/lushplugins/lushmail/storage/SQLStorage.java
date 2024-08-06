@@ -4,6 +4,7 @@ import com.google.gson.JsonParser;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lushplugins.lushlib.utils.SimpleItemStack;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.config.StorageConfig;
@@ -297,20 +298,27 @@ public class SQLStorage implements Storage {
 
     @Override
     public void regenerateMailPreviewItems() {
+        List<String> mailIds = new ArrayList<>();
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
             "SELECT id FROM mail_data;")) {
 
             ResultSet results = stmt.executeQuery();
             while (results.next()) {
-                String id = results.getString("id");
-
-                Mail mail = loadMail(id);
-                if (mail != null) {
-                    saveMail(mail);
-                }
+                mailIds.add(results.getString("id"));
             }
         } catch (SQLException e) {
             e.printStackTrace();
+        }
+
+        for (String mailId : mailIds) {
+            regenerateMailPreviewItem(mailId);
+        }
+    }
+
+    public void regenerateMailPreviewItem(@Nullable String mailId) {
+        Mail mail = loadMail(mailId);
+        if (mail != null) {
+            saveMail(mail);
         }
     }
 
