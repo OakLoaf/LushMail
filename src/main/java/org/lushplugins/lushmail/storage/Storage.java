@@ -2,7 +2,7 @@ package org.lushplugins.lushmail.storage;
 
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lushplugins.lushlib.utils.SimpleItemStack;
+import org.lushplugins.lushlib.utils.DisplayItemStack;
 import org.lushplugins.lushmail.data.MailUser;
 import org.lushplugins.lushmail.data.OfflineMailUser;
 import org.lushplugins.lushmail.data.ReceivedGroupMail;
@@ -40,7 +40,7 @@ public interface Storage {
 
     boolean hasReceivedMail(UUID receiver, String mailId);
 
-    @Nullable SimpleItemStack loadMailPreviewItem(String id);
+    @Nullable DisplayItemStack loadMailPreviewItem(String id);
 
     void regenerateMailPreviewItems();
 

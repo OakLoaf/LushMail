@@ -1,8 +1,9 @@
 package org.lushplugins.lushmail.gui;
 
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.lushplugins.lushlib.gui.inventory.SimpleGui;
-import org.lushplugins.lushlib.utils.SimpleItemStack;
+import org.lushplugins.lushlib.utils.DisplayItemStack;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.storage.StorageManager;
 
@@ -36,8 +37,9 @@ public class MailGui extends SimpleGui {
                         return;
                     }
 
-                    List<String> lore = item.getLore() != null ? item.getLore() : new ArrayList<>();
-                    SimpleItemStack previewLayout = LushMail.getInstance().getConfigManager().getGuiItem("text-mail");
+                    List<String> lore = item.getLore() != null ? new ArrayList<>(item.getLore()) : new ArrayList<>();
+                    DisplayItemStack.Builder previewItem = DisplayItemStack.Builder.of(item);
+                    DisplayItemStack previewLayout = LushMail.getInstance().getConfigManager().getGuiItem("text-mail");
                     if (previewLayout != null) {
                         List<String> previewLore = previewLayout.getLore();
                         if (previewLore != null) {
@@ -45,11 +47,12 @@ public class MailGui extends SimpleGui {
                             lore.replaceAll((line) -> line.replace("%mail_id%", mailId));
                         }
 
-                        item.setLore(lore);
+                        previewItem.setLore(lore);
                     }
 
-                    setItem(slot, item.asItemStack(this.getPlayer())); // TODO: Remove once addButton is fixed
-                    addButton(slot, item.asItemStack(this.getPlayer()), (event) -> {
+                    ItemStack button = previewItem.build().asItemStack(this.getPlayer());
+                    setItem(slot, button); // TODO: Remove once addButton is fixed
+                    addButton(slot, button, (event) -> {
                         switch (event.getAction()) {
                             case PICKUP_HALF -> storageManager.loadMail(mailId).thenAccept(mail -> mail.preview(this.getPlayer()));
                             case PICKUP_ALL -> storageManager.loadMail(mailId).thenAccept(mail -> mail.open(this.getPlayer()));

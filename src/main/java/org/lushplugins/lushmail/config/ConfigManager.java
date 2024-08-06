@@ -5,7 +5,8 @@ import org.bukkit.configuration.file.FileConfiguration;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 import org.lushplugins.lushlib.gui.inventory.GuiFormat;
-import org.lushplugins.lushlib.utils.SimpleItemStack;
+import org.lushplugins.lushlib.utils.DisplayItemStack;
+import org.lushplugins.lushlib.utils.YamlUtils;
 import org.lushplugins.lushmail.LushMail;
 
 import java.util.Map;
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class ConfigManager {
     private String consoleName;
     private GuiFormat mailGuiFormat;
-    private final ConcurrentHashMap<String, SimpleItemStack> guiItems = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, DisplayItemStack> guiItems = new ConcurrentHashMap<>();
     private final ConcurrentHashMap<String, String> messages = new ConcurrentHashMap<>();
 
     public ConfigManager() {
@@ -37,7 +38,7 @@ public class ConfigManager {
             for (Map.Entry<String, Object> entry : guiItemsSection.getValues(false).entrySet()) {
                 if (entry.getValue() instanceof ConfigurationSection itemSection) {
                     String key = entry.getKey();
-                    SimpleItemStack guiItem = new SimpleItemStack(itemSection);
+                    DisplayItemStack guiItem = YamlUtils.getDisplayItem(itemSection);
 
                     if (key.equals("border")) {
                         mailGuiFormat.setItemReference('#', guiItem);
@@ -70,8 +71,13 @@ public class ConfigManager {
         return guiItems.containsKey(key);
     }
 
-    public @Nullable SimpleItemStack getGuiItem(String key) {
-        return guiItems.get(key).clone();
+    public @Nullable DisplayItemStack getGuiItem(String key) {
+        return guiItems.get(key);
+    }
+
+    public @Nullable DisplayItemStack.Builder getGuiItemBuilder(String key) {
+        DisplayItemStack displayItem = getGuiItem(key);
+        return displayItem != null ? DisplayItemStack.Builder.of(displayItem) : null;
     }
 
     public @Nullable String getMessage(String key) {

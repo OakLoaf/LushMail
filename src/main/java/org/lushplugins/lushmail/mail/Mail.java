@@ -1,7 +1,7 @@
 package org.lushplugins.lushmail.mail;
 
 import org.bukkit.entity.Player;
-import org.lushplugins.lushlib.utils.SimpleItemStack;
+import org.lushplugins.lushlib.utils.DisplayItemStack;
 
 public abstract class Mail {
     private final String id;
@@ -63,7 +63,7 @@ public abstract class Mail {
     /**
      * @return The preview item to be shown in the mail gui
      */
-    public abstract SimpleItemStack getPreviewItem();
+    public abstract DisplayItemStack getPreviewItem();
 
     public static class State {
         public static final String OPENED = "opened";

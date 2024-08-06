@@ -2,7 +2,7 @@ package org.lushplugins.lushmail.storage;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
-import org.lushplugins.lushlib.utils.SimpleItemStack;
+import org.lushplugins.lushlib.utils.DisplayItemStack;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.config.StorageConfig;
 import org.lushplugins.lushmail.data.MailUser;
@@ -87,7 +87,7 @@ public class StorageManager {
         return runAsync(() -> storage.hasReceivedMail(receiver, mailId));
     }
 
-    public CompletableFuture<SimpleItemStack> loadMailPreviewItem(String id) {
+    public CompletableFuture<DisplayItemStack> loadMailPreviewItem(String id) {
         return runAsync(() -> storage.loadMailPreviewItem(id));
     }
 

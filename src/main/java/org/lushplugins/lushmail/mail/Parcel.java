@@ -1,7 +1,7 @@
 package org.lushplugins.lushmail.mail;
 
 import org.bukkit.entity.Player;
-import org.lushplugins.lushlib.utils.SimpleItemStack;
+import org.lushplugins.lushlib.utils.DisplayItemStack;
 
 import java.util.List;
 
@@ -35,7 +35,7 @@ public class Parcel extends Mail {
     }
 
     @Override
-    public SimpleItemStack getPreviewItem() {
+    public DisplayItemStack getPreviewItem() {
         return null;
     }
 }
