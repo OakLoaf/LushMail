@@ -88,6 +88,13 @@ public class StorageManager {
         return runAsync(() -> storage.hasReceivedMail(receiver, mailId));
     }
 
+    public CompletableFuture<DisplayItemStack> loadMailPreparedPreviewItem(String id) {
+        return runAsync(() -> {
+            Mail mail = storage.loadMail(id);
+            return mail != null ? mail.getPreparedPreviewItem() : null;
+        });
+    }
+
     public CompletableFuture<DisplayItemStack> loadMailPreviewItem(String id) {
         return runAsync(() -> {
             Mail mail = storage.loadMail(id);
