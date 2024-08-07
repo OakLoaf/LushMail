@@ -37,7 +37,7 @@ messages:
   received-offline-mail: "&aYou have %count% new mail"
   deleted-mail: "&aRemoved mail '%mail_id%' from your mail list!"
   deleted-all-mail: "&aYour mail list has been cleared!"
-  mail-not-found: "&cCould not find this mail in your mail list"
+  mail-not-found: "&cCould not find this mail"
   no-mail: "&cCould not find any mail in your mail list"
   ignored: "&cYou cannot send mail to %player%"
   ignore-player: "&aYou will no longer receive mail from %player%"

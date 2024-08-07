@@ -10,20 +10,24 @@ import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.data.OfflineMailUser;
 import org.lushplugins.lushmail.storage.StorageManager;
 
+import java.util.UUID;
+
 public class PlayerListener implements EventListener {
 
     @EventHandler
     public void onPlayerJoin(PlayerJoinEvent event) {
         Player player = event.getPlayer();
+        UUID uuid = player.getUniqueId();
+
         Bukkit.getScheduler().runTaskLater(LushMail.getInstance(), () -> {
             StorageManager storageManager = LushMail.getInstance().getStorageManager();
-            storageManager.loadOfflineMailUser(player.getUniqueId()).thenAccept(mailUser -> {
+            storageManager.loadOfflineMailUser(uuid).thenAccept(mailUser -> {
                 if (mailUser == null || !mailUser.getUsername().equals(player.getName())) {
-                    storageManager.saveOfflineMailUser(new OfflineMailUser(player.getUniqueId(), player.getName()));
+                    storageManager.saveOfflineMailUser(new OfflineMailUser(uuid, player.getName()));
                 }
             });
 
-            LushMail.getInstance().getMailManager().getAllUnopenedMailIds(player).thenAccept(mailIds -> {
+            LushMail.getInstance().getMailManager().getAllUnopenedMailIds(uuid).thenAccept(mailIds -> {
                 int mailCount = mailIds.size();
                 if (mailCount > 0) {
                     ChatColorHandler.sendMessage(player, LushMail.getInstance().getConfigManager().getMessage("received-offline-mail", "&aYou have %count% new mail")

@@ -2,6 +2,8 @@ package org.lushplugins.lushmail.storage;
 
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lushplugins.lushlib.utils.DisplayItemStack;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.config.StorageConfig;
@@ -79,7 +81,7 @@ public class StorageManager {
         return runAsync(() -> storage.getReceivedMailIds(receiver, state));
     }
 
-    public CompletableFuture<ReceivedMail> getReceivedMail(UUID receiver, String mailId) {
+    public CompletableFuture<ReceivedMail> getReceivedMail(@NotNull UUID receiver, String mailId) {
         return runAsync(() -> storage.getReceivedMail(receiver, mailId));
     }
 

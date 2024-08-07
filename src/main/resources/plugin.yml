@@ -7,3 +7,8 @@ softdepend:
 commands:
   mail:
     usage: /mail
+permissions:
+  lushmail.open:
+    default: true
+  lushmail.preview:
+    default: true

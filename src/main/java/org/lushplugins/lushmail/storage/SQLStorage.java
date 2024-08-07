@@ -213,7 +213,7 @@ public class SQLStorage implements Storage {
     }
 
     @Override
-    public ReceivedMail getReceivedMail(UUID receiver, String mailId) {
+    public ReceivedMail getReceivedMail(@NotNull UUID receiver, String mailId) {
         try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
             "SELECT * FROM received_mail WHERE uuid = ? AND mail_id = ?;")) {
             stmt.setString(1, receiver.toString());

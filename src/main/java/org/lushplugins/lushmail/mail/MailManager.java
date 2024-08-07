@@ -30,10 +30,12 @@ public class MailManager {
         }, 0, 1200);
     }
 
-    public CompletableFuture<List<String>> getAllUnopenedMailIds(Player player) {
-        return LushMail.getInstance().getStorageManager().getReceivedMailIds(player.getUniqueId(), Mail.State.UNOPENED).thenApply(mailIds -> {
+    public CompletableFuture<List<String>> getAllUnopenedMailIds(UUID uuid) {
+        Player player = Bukkit.getPlayer(uuid);
+
+        return LushMail.getInstance().getStorageManager().getReceivedMailIds(uuid, Mail.State.UNOPENED).thenApply(mailIds -> {
             for (String group : groupMails.keySet()) {
-                if (group.equals("all") || player.hasPermission("group." + group)) {
+                if (group.equals("all") || (player != null && player.hasPermission("group." + group))) {
                     mailIds.addAll(groupMails.get(group).stream().map(ReceivedGroupMail::getId).toList());
                 }
             }

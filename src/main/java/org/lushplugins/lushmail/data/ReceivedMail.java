@@ -1,21 +1,24 @@
 package org.lushplugins.lushmail.data;
 
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.mail.Mail;
+import org.lushplugins.lushmail.storage.StorageManager;
 
 import java.util.UUID;
 
 public class ReceivedMail {
     private final String id;
-    private final UUID receiver;
+    private final UUID receiverUuid;
     private String state;
     private boolean favourited;
     private final long timeSent;
     private final long timeout;
 
-    public ReceivedMail(String id, UUID receiver, String state, boolean favourited, long timeSent, long timeout) {
+    public ReceivedMail(String id, UUID receiverUuid, String state, boolean favourited, long timeSent, long timeout) {
         this.id = id;
-        this.receiver = receiver;
+        this.receiverUuid = receiverUuid;
         this.state = state;
         this.favourited = favourited;
         this.timeSent = timeSent;
@@ -50,13 +53,33 @@ public class ReceivedMail {
         return timeout;
     }
 
+    public void preview() {
+        Player receiver = Bukkit.getPlayer(receiverUuid);
+        if (receiver == null) {
+            return;
+        }
+
+        LushMail.getInstance().getStorageManager().loadMail(id).thenAccept(mail -> {
+            mail.preview(receiver);
+        });
+
+    }
+
     public void open() {
         if (state.equals(Mail.State.OPENED)) {
             return;
         }
 
-        LushMail.getInstance().getStorageManager().setMailState(receiver, id, Mail.State.OPENED).thenAccept(ignored -> {
-            // TODO: Implement open mail logic
+        Player receiver = Bukkit.getPlayer(receiverUuid);
+        if (receiver == null) {
+            return;
+        }
+
+        StorageManager storageManager = LushMail.getInstance().getStorageManager();
+        storageManager.loadMail(id).thenAccept(mail -> {
+            storageManager.setMailState(receiverUuid, id, Mail.State.OPENED).thenAccept((ignored) -> {
+                mail.open(receiver);
+            });
         });
     }
 }

@@ -36,7 +36,7 @@ public interface Storage {
 
     @NotNull List<String> getReceivedMailIds(UUID receiver, String state);
 
-    ReceivedMail getReceivedMail(UUID receiver, String mailId);
+    ReceivedMail getReceivedMail(@NotNull UUID receiver, String mailId);
 
     boolean hasReceivedMail(UUID receiver, String mailId);
 

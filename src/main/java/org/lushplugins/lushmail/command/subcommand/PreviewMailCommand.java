@@ -11,12 +11,13 @@ import org.lushplugins.lushmail.mail.Mail;
 import org.lushplugins.lushmail.storage.StorageManager;
 
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
 
-public class OpenMailCommand extends SubCommand {
+public class PreviewMailCommand extends SubCommand {
 
-    public OpenMailCommand() {
+    public PreviewMailCommand() {
         super("open");
-        addRequiredPermission("lushmail.open");
+        addRequiredPermission("lushmail.preview");
     }
 
     @Override
@@ -33,28 +34,29 @@ public class OpenMailCommand extends SubCommand {
         }
 
         UUID receiver = player.getUniqueId();
-        String mailIdRaw = args[0].strip();
+        String mailId = args[0].strip();
         StorageManager storageManager = LushMail.getInstance().getStorageManager();
 
-        if (mailIdRaw.equals("all")) { // TODO: Consider limiting to non-text mail only
-            storageManager.getReceivedMailIds(receiver, Mail.State.UNOPENED).thenAccept(mailIds -> {
-                for (String mailId : mailIds) {
-                    storageManager.getReceivedMail(receiver, mailId).thenAccept(mail -> {
-                        if (mail != null) {
-                            mail.open();
-                        }
-                    });
+        CompletableFuture<Mail> mailFuture = new CompletableFuture<>();
+        mailFuture.thenAccept(mail -> {
+            if (mail == null) {
+                ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("mail-not-found", "&cCould not find this mail"));
+                return;
+            }
+
+            mail.preview(player);
+        });
+
+        if (!player.hasPermission("lushmail.preview.others")) {
+            storageManager.hasReceivedMail(receiver, mailId).thenAccept((hasReceived) -> {
+                if (hasReceived) {
+                    storageManager.loadMail(mailId).thenAccept(mailFuture::complete);
+                } else {
+                    mailFuture.complete(null);
                 }
             });
         } else {
-            storageManager.getReceivedMail(receiver, mailIdRaw).thenAccept(mail -> {
-                if (mail == null) {
-                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("mail-not-found", "&cCould not find this mail in your mail list"));
-                    return;
-                }
-
-                mail.open();
-            });
+            storageManager.loadMail(mailId).thenAccept(mailFuture::complete);
         }
 
         return true;
