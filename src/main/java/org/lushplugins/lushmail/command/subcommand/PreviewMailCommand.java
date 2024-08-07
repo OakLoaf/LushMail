@@ -7,6 +7,7 @@ import org.jetbrains.annotations.NotNull;
 import org.lushplugins.lushlib.command.SubCommand;
 import org.lushplugins.lushlib.libraries.chatcolor.ChatColorHandler;
 import org.lushplugins.lushmail.LushMail;
+import org.lushplugins.lushmail.gui.PreviewGui;
 import org.lushplugins.lushmail.mail.Mail;
 import org.lushplugins.lushmail.storage.StorageManager;
 
@@ -44,7 +45,7 @@ public class PreviewMailCommand extends SubCommand {
                 return;
             }
 
-            mail.preview(player);
+            new PreviewGui(mail, player).open();
         });
 
         if (!player.hasPermission("lushmail.preview.others")) {

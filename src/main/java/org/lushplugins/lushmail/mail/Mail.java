@@ -2,6 +2,10 @@ package org.lushplugins.lushmail.mail;
 
 import org.bukkit.entity.Player;
 import org.lushplugins.lushlib.utils.DisplayItemStack;
+import org.lushplugins.lushmail.LushMail;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public abstract class Mail {
     private final String id;
@@ -61,7 +65,29 @@ public abstract class Mail {
     public abstract void preview(Player player);
 
     /**
-     * @return The preview item to be shown in the mail gui
+     * @return The prepared preview item to be shown in guis
+     */
+    public DisplayItemStack getPreparedPreviewItem() {
+        DisplayItemStack.Builder previewItemBuilder = DisplayItemStack.Builder.of(this.getPreviewItem());
+
+        List<String> lore = previewItemBuilder.getLore() != null ? new ArrayList<>(previewItemBuilder.getLore()) : new ArrayList<>();
+        DisplayItemStack previewLayout = LushMail.getInstance().getConfigManager().getGuiItem("preview-mail");
+        if (previewLayout != null) {
+            List<String> previewLore = previewLayout.getLore();
+            if (previewLore != null) {
+                lore.addAll(previewLore);
+                lore.replaceAll((line) -> line.replace("%mail_id%", this.getId()));
+            }
+
+            previewItemBuilder.setLore(lore);
+        }
+
+        return previewItemBuilder.build();
+    }
+
+    /**
+     * To get the prepared preview item see {@link Mail#getPreparedPreviewItem()}
+     * @return The mail's preview item
      */
     public abstract DisplayItemStack getPreviewItem();
 
