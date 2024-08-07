@@ -1,7 +1,9 @@
 package org.lushplugins.lushmail.mail;
 
 import org.bukkit.entity.Player;
+import org.lushplugins.lushlib.libraries.chatcolor.ChatColorHandler;
 import org.lushplugins.lushlib.utils.DisplayItemStack;
+import org.lushplugins.lushmail.LushMail;
 
 public class ItemMail extends Mail {
 
@@ -15,7 +17,9 @@ public class ItemMail extends Mail {
 
     @Override
     public void open(Player player) {
-
+        if (false) { // TODO: Check if state is "opened"
+            ChatColorHandler.sendMessage(player, LushMail.getInstance().getConfigManager().getMessage("already-opened-mail", "&cThis mail has already been opened!"));
+        }
     }
 
     @Override
