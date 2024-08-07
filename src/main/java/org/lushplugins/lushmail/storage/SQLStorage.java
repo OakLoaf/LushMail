@@ -226,7 +226,7 @@ public class SQLStorage implements Storage {
                 long timeSent = resultSet.getLong("time_sent");
                 long timeout = resultSet.getLong("timeout");
 
-                new ReceivedMail(mailId, receiver, state, favourited, timeSent, timeout);
+                return new ReceivedMail(mailId, receiver, state, favourited, timeSent, timeout);
             }
         } catch (SQLException e) {
             e.printStackTrace();
