@@ -49,7 +49,7 @@ public class MailGui extends SimpleGui {
                         switch (event.getClick()) {
                             case RIGHT -> storageManager.loadMail(mailId).thenAccept(loadedMail -> loadedMail.preview(this.getPlayer()));
                             case LEFT -> {
-                                if (!this.getPlayer().getUniqueId().equals(mailUserUuid)) {
+                                if (this.getPlayer().getUniqueId().equals(mailUserUuid)) {
                                     storageManager.getReceivedMail(mailUserUuid, mailId).thenAccept(ReceivedMail::open);
                                 }
                             }
