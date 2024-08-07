@@ -90,7 +90,10 @@ public class StorageManager {
     }
 
     public CompletableFuture<DisplayItemStack> loadMailPreviewItem(String id) {
-        return runAsync(() -> storage.loadMailPreviewItem(id));
+        return runAsync(() -> {
+            Mail mail = storage.loadMail(id);
+            return mail != null ? mail.getPreviewItem() : null;
+        });
     }
 
     public CompletableFuture<Void> regenerateMailPreviewItems() {

@@ -5,7 +5,6 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
-import org.lushplugins.lushlib.utils.DisplayItemStack;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.config.StorageConfig;
 import org.lushplugins.lushmail.data.MailUser;
@@ -274,26 +273,6 @@ public class SQLStorage implements Storage {
         }
 
         return false;
-    }
-
-    @Override
-    public DisplayItemStack loadMailPreviewItem(String id) {
-        try (Connection conn = conn(); PreparedStatement stmt = conn.prepareStatement(
-            "SELECT preview_item FROM mail_data WHERE id = ?;")) {
-            stmt.setString(1, id);
-
-            ResultSet resultSet = stmt.executeQuery();
-            if (resultSet.next()) {
-                String jsonRaw = resultSet.getString("preview_item");
-                if (jsonRaw != null) {
-                    return LushMail.getGson().fromJson(JsonParser.parseString(jsonRaw), DisplayItemStack.class);
-                }
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-
-        return null;
     }
 
     @Override
