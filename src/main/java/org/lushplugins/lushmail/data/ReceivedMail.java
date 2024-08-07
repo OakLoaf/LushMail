@@ -66,10 +66,6 @@ public class ReceivedMail {
     }
 
     public void open() {
-        if (state.equals(Mail.State.OPENED)) {
-            return;
-        }
-
         Player receiver = Bukkit.getPlayer(receiverUuid);
         if (receiver == null) {
             return;
@@ -77,9 +73,13 @@ public class ReceivedMail {
 
         StorageManager storageManager = LushMail.getInstance().getStorageManager();
         storageManager.loadMail(id).thenAccept(mail -> {
-            storageManager.setMailState(receiverUuid, id, Mail.State.OPENED).thenAccept((ignored) -> {
+            if (!state.equals(Mail.State.OPENED)) {
+                storageManager.setMailState(receiverUuid, id, Mail.State.OPENED).thenAccept((ignored) -> {
+                    mail.open(receiver);
+                });
+            } else {
                 mail.open(receiver);
-            });
+            }
         });
     }
 }
