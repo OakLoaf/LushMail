@@ -53,6 +53,11 @@ public class OpenMailCommand extends SubCommand {
                     return;
                 }
 
+                if (mail.getState() .equals(Mail.State.OPENED)) {
+                    ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("already-opened-mail", "&cThis mail has already been opened!"));
+                    return;
+                }
+
                 mail.open();
             });
         }

@@ -31,6 +31,7 @@ messages:
   no-permissions: "&cYou don't have permissions for this command"
   invalid-args: "&cInvalid arguments try: %command%"
   invalid-player: "&cCould not find player '%player%'"
+  already-opened-mail: "&cThis mail has already been opened!"
   sent-mail: "&aSent mail to %receiver%"
   failed-to-send-mail: "&cSomething went wrong whilst trying to send mail"
   received-mail: "&aYou have received new mail from %sender%!"
