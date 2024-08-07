@@ -19,6 +19,7 @@ public class ItemMail extends Mail {
     public void open(Player player) {
         if (false) { // TODO: Check if state is "opened"
             ChatColorHandler.sendMessage(player, LushMail.getInstance().getConfigManager().getMessage("already-opened-mail", "&cThis mail has already been opened!"));
+            return;
         }
     }
 
