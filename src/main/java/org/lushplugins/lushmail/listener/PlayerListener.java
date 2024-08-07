@@ -8,6 +8,7 @@ import org.lushplugins.lushlib.libraries.chatcolor.ChatColorHandler;
 import org.lushplugins.lushlib.listener.EventListener;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.data.OfflineMailUser;
+import org.lushplugins.lushmail.mail.Mail;
 import org.lushplugins.lushmail.storage.StorageManager;
 
 import java.util.UUID;
@@ -27,7 +28,7 @@ public class PlayerListener implements EventListener {
                 }
             });
 
-            LushMail.getInstance().getMailManager().getAllUnopenedMailIds(uuid).thenAccept(mailIds -> {
+            LushMail.getInstance().getMailManager().getReceivedMailIds(uuid, Mail.State.UNOPENED).thenAccept(mailIds -> {
                 int mailCount = mailIds.size();
                 if (mailCount > 0) {
                     ChatColorHandler.sendMessage(player, LushMail.getInstance().getConfigManager().getMessage("received-offline-mail", "&aYou have %count% new mail")

@@ -29,7 +29,7 @@ public class MailGui extends SimpleGui {
 
         PriorityQueue<Integer> slots = new PriorityQueue<>(LushMail.getInstance().getConfigManager().getMailGuiFormat().getSlotMap().get('M'));
         // TODO: Adjust to query that accepts indexes (for pagination)
-        LushMail.getInstance().getMailManager().getAllUnopenedMailIds(mailUserUuid).thenAccept(mailIds -> {
+        LushMail.getInstance().getMailManager().getReceivedMailIds(mailUserUuid).thenAccept(mailIds -> {
             StorageManager storageManager = LushMail.getInstance().getStorageManager();
 
             for (String mailId : mailIds) {

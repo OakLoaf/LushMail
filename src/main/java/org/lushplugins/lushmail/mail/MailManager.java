@@ -4,6 +4,8 @@ import com.google.common.collect.HashMultimap;
 import org.bukkit.Bukkit;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
+import org.jetbrains.annotations.NotNull;
+import org.jetbrains.annotations.Nullable;
 import org.lushplugins.lushmail.LushMail;
 import org.lushplugins.lushmail.data.ReceivedGroupMail;
 import org.lushplugins.lushmail.storage.StorageManager;
@@ -30,10 +32,21 @@ public class MailManager {
         }, 0, 1200);
     }
 
-    public CompletableFuture<List<String>> getAllUnopenedMailIds(UUID uuid) {
+    public CompletableFuture<List<String>> getReceivedMailIds(@NotNull UUID uuid) {
+        return getReceivedMailIds(uuid, null);
+    }
+
+    public CompletableFuture<List<String>> getReceivedMailIds(@NotNull UUID uuid, @Nullable String state) {
         Player player = Bukkit.getPlayer(uuid);
 
-        return LushMail.getInstance().getStorageManager().getReceivedMailIds(uuid, Mail.State.UNOPENED).thenApply(mailIds -> {
+        CompletableFuture<List<String>> future;
+        if (state != null) {
+            future = LushMail.getInstance().getStorageManager().getReceivedMailIds(uuid, state);
+        } else {
+            future = LushMail.getInstance().getStorageManager().getReceivedMailIds(uuid);
+        }
+
+        return future.thenApply(mailIds -> {
             for (String group : groupMails.keySet()) {
                 if (group.equals("all") || (player != null && player.hasPermission("group." + group))) {
                     mailIds.addAll(groupMails.get(group).stream().map(ReceivedGroupMail::getId).toList());
