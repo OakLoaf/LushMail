@@ -16,7 +16,7 @@ import java.util.concurrent.CompletableFuture;
 public class PreviewMailCommand extends SubCommand {
 
     public PreviewMailCommand() {
-        super("open");
+        super("preview");
         addRequiredPermission("lushmail.preview");
     }
 
