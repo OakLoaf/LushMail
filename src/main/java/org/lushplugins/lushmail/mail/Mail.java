@@ -76,7 +76,9 @@ public abstract class Mail {
             List<String> previewLore = previewLayout.getLore();
             if (previewLore != null) {
                 lore.addAll(previewLore);
-                lore.replaceAll((line) -> line.replace("%mail_id%", this.getId()));
+                lore.replaceAll((line) -> line
+                    .replace("%mail_id%", this.getId())
+                    .replace("%sender%", this.getSender()));
             }
 
             previewItemBuilder.setLore(lore);
