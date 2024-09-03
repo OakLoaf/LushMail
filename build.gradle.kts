@@ -10,10 +10,10 @@ version = "0.2.5"
 repositories {
     mavenLocal()
     mavenCentral()
-    maven { url = uri("https://oss.sonatype.org/content/repositories/snapshots/") }
-    maven { url = uri("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") } // Spigot
-    maven { url = uri("https://repo.lushplugins.org/releases/") } // LushLib
-    maven { url = uri("https://repo.lushplugins.org/snapshots/") } // LushLib
+    maven("https://oss.sonatype.org/content/repositories/snapshots/")
+    maven("https://hub.spigotmc.org/nexus/content/repositories/snapshots/") // Spigot
+    maven("https://repo.lushplugins.org/releases/") // LushLib
+    maven("https://repo.lushplugins.org/snapshots/") // LushLib
 }
 
 dependencies {
