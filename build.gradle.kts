@@ -19,6 +19,8 @@ repositories {
 dependencies {
     // Dependencies
     compileOnly("org.spigotmc:spigot-api:${findProperty("minecraftVersion")}-R0.1-SNAPSHOT")
+    compileOnly("com.mysql:mysql-connector-j:${findProperty("mysqlConnectorVersion")}")
+    compileOnly("org.xerial:sqlite-jdbc:${findProperty("sqliteConnectorVersion")}")
 
     // Soft Dependencies
     compileOnly("net.luckperms:api:${findProperty("luckPermsVersion")}")
@@ -27,8 +29,6 @@ dependencies {
     implementation("org.bstats:bstats-bukkit:${findProperty("bStatsVersion")}")
     implementation("com.zaxxer:HikariCP:${findProperty("hikariCPVersion")}")
     implementation("org.lushplugins:LushLib:${findProperty("lushLibVersion")}")
-    implementation("com.mysql:mysql-connector-j:${findProperty("mysqlConnectorVersion")}")
-    implementation("org.xerial:sqlite-jdbc:${findProperty("sqliteConnectorVersion")}")
 }
 
 java {
@@ -45,7 +45,6 @@ tasks {
     shadowJar {
         relocate("org.bstats", "org.lushplugins.lushrewards.libraries.bstats")
         relocate("org.lushplugins.lushlib", "org.lushplugins.lushrewards.libraries.lushlib")
-        relocate("com.mysql", "org.lushplugins.lushrewards.libraries.mysql")
 
         minimize {
             exclude(dependency("com.mysql:.*:.*"))
