@@ -7,6 +7,8 @@ import org.jetbrains.annotations.NotNull;
 import org.lushplugins.lushlib.command.SubCommand;
 import org.lushplugins.lushlib.libraries.chatcolor.ChatColorHandler;
 import org.lushplugins.lushmail.LushMail;
+import org.lushplugins.lushmail.api.event.MailSendEvent;
+import org.lushplugins.lushmail.mail.Mail;
 import org.lushplugins.lushmail.mail.TextMail;
 import org.lushplugins.lushmail.storage.StorageManager;
 
@@ -53,15 +55,19 @@ public class SendMailCommand extends SubCommand {
 
                     String senderId;
                     String senderName;
+                    Player senderPlayer;
                     if (sender instanceof Player player) {
                         senderId = player.getUniqueId().toString();
                         senderName = player.getName();
+                        senderPlayer = player;
                     } else {
                         senderId = "console";
                         senderName = LushMail.getInstance().getConfigManager().getConsoleName();
+                        senderPlayer = null;
                     }
 
-                    storageManager.saveMail(new TextMail(id, message, senderName))
+                    Mail mail = new TextMail(id, message, senderName);
+                    storageManager.saveMail(mail)
                         .thenAccept(ignored -> storageManager.sendMail(senderId, receiverUuid, id));
 
                     ChatColorHandler.sendMessage(sender, LushMail.getInstance().getConfigManager().getMessage("sent-mail", "&aSent mail to %receiver%")
@@ -72,6 +78,8 @@ public class SendMailCommand extends SubCommand {
                         ChatColorHandler.sendMessage(receiver, LushMail.getInstance().getConfigManager().getMessage("received-mail", "&aYou have received new mail from %sender%!")
                             .replace("%sender%", senderName));
                     }
+
+                    LushMail.getInstance().callEvent(new MailSendEvent(mail, senderPlayer, receiver));
                 });
             });
         });
