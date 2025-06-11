@@ -1,7 +1,7 @@
 plugins {
-    java
+    `java-library`
     `maven-publish`
-    id("io.github.goooler.shadow") version("8.1.7")
+    id("com.gradleup.shadow") version("8.3.3")
 }
 
 group = "org.lushplugins"
@@ -31,7 +31,16 @@ dependencies {
     implementation("org.xerial:sqlite-jdbc:${findProperty("sqliteConnectorVersion")}")
 }
 
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
+
+    withSourcesJar()
+}
+
 tasks {
+    withType<JavaCompile> {
+        options.encoding = "UTF-8"
+    }
 
     shadowJar {
         relocate("org.bstats", "org.lushplugins.lushrewards.libraries.bstats")
@@ -42,8 +51,6 @@ tasks {
             exclude(dependency("com.mysql:.*:.*"))
         }
 
-        val folder = System.getenv("pluginFolder")
-        if (folder != null) destinationDirectory.set(file(folder))
         archiveFileName.set("${project.name}-${project.version}.jar")
     }
 
@@ -57,19 +64,37 @@ tasks {
     }
 }
 
-allprojects {
-    apply(plugin = "java")
+publishing {
+    publishing {
+        repositories {
+            maven {
+                name = "lushReleases"
+                url = uri("https://repo.lushplugins.org/releases")
+                credentials(PasswordCredentials::class)
+                authentication {
+                    isAllowInsecureProtocol = true
+                    create<BasicAuthentication>("basic")
+                }
+            }
 
-    group = rootProject.group
-    version = rootProject.version
+            maven {
+                name = "lushSnapshots"
+                url = uri("https://repo.lushplugins.org/snapshots")
+                credentials(PasswordCredentials::class)
+                authentication {
+                    isAllowInsecureProtocol = true
+                    create<BasicAuthentication>("basic")
+                }
+            }
+        }
 
-    java {
-        toolchain.languageVersion.set(JavaLanguageVersion.of(21))
-    }
-
-    tasks {
-        withType<JavaCompile> {
-            options.encoding = "UTF-8"
+        publications {
+            create<MavenPublication>("maven") {
+                groupId = rootProject.group.toString()
+                artifactId = rootProject.name
+                version = rootProject.version.toString()
+                from(project.components["java"])
+            }
         }
     }
 }
