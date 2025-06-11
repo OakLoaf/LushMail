@@ -18,6 +18,14 @@ public class MailSendEvent extends MailEvent {
         this.receiver = receiver;
     }
 
+    public @Nullable Player getSender() {
+        return sender;
+    }
+
+    public @Nullable Player getReceiver() {
+        return receiver;
+    }
+
     @Override
     public @NotNull HandlerList getHandlers() {
         return HANDLERS;
