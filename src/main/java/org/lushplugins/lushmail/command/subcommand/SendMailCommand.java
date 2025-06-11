@@ -79,7 +79,9 @@ public class SendMailCommand extends SubCommand {
                             .replace("%sender%", senderName));
                     }
 
-                    LushMail.getInstance().callEvent(new MailSendEvent(mail, senderPlayer, receiver));
+                    Bukkit.getScheduler().runTask(LushMail.getInstance(), () -> {
+                        LushMail.getInstance().callEvent(new MailSendEvent(mail, senderPlayer, receiver));
+                    });
                 });
             });
         });
