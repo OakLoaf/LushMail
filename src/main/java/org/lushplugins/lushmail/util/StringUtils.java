@@ -16,7 +16,8 @@ public class StringUtils {
 
         String copy = string;
         while (copy.length() > count) {
-            int index = Math.min(copy.lastIndexOf(" ", count), count + 10);
+            int lastIndex = copy.lastIndexOf(" ", count);
+            int index = lastIndex >= 0 ? Math.min(lastIndex, count + 10) : count + 10;
             strings.add(copy.substring(0, index).strip());
             copy = copy.substring(index);
         }
